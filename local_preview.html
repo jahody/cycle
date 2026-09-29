@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>CycleSync 🌸 (Local Preview)</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          colors: {
+            rose: { 50: '#fff1f2', 100: '#ffe4e6', 200: '#fecdd3', 500: '#f43f5e', 600: '#e11d48' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .phase-glow-menstrual { box-shadow: 0 10px 30px -10px rgba(229, 62, 62, 0.35); }
+    .phase-glow-follicular { box-shadow: 0 10px 30px -10px rgba(237, 100, 166, 0.35); }
+    .phase-glow-ovulatory { box-shadow: 0 10px 30px -10px rgba(56, 161, 105, 0.35); }
+    .phase-glow-luteal { box-shadow: 0 10px 30px -10px rgba(128, 90, 213, 0.35); }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen pb-16 antialiased selection:bg-rose-100 selection:text-rose-600">
+
+  <!-- Local Preview Top Banner -->
+  <div class="bg-indigo-600 text-white text-xs px-4 py-2 text-center font-medium shadow-sm flex items-center justify-center space-x-2">
+    <span>✨ <strong>Local Simulation Mode</strong>: Previewing how CycleSync looks and behaves. In production, this runs directly inside your Google Apps Script.</span>
+  </div>
+
+  <!-- Header -->
+  <header class="bg-white/80 backdrop-blur-md sticky top-0 z-30 border-b border-slate-100">
+    <div class="max-w-2xl mx-auto px-4 py-3.5 flex items-center justify-between">
+      <div class="flex items-center space-x-2">
+        <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-rose-500 to-pink-400 flex items-center justify-center text-white text-lg shadow-md shadow-rose-200">
+          🌸
+        </div>
+        <div>
+          <h1 class="text-lg font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 bg-clip-text text-transparent leading-none">CycleSync</h1>
+          <p class="text-[11px] text-slate-400 font-medium mt-0.5" id="headerDate">Loading date...</p>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-2">
+        <a href="https://calendar.google.com" target="_blank" rel="noopener noreferrer" 
+           class="p-2 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition flex items-center space-x-1 text-xs font-medium"
+           title="Open Google Calendar">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+          </svg>
+          <span class="hidden sm:inline">Calendar</span>
+        </a>
+        <button onclick="openSettingsModal()" class="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition" title="Settings">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-2xl mx-auto px-4 pt-4 space-y-4">
+
+    <!-- Active State Content -->
+    <div id="appContent" class="space-y-4">
+
+      <!-- Hero Current Phase Card -->
+      <div id="heroPhaseCard" class="relative overflow-hidden bg-white rounded-3xl border border-slate-100 p-6 transition-all duration-300 shadow-sm">
+        <div class="flex items-start justify-between">
+          <div>
+            <div class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider mb-2" id="phaseBadge">
+              <span id="phaseEmoji">🔴</span>
+              <span id="phaseName">Menstrual Phase</span>
+            </div>
+            <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight" id="phaseDayTitle">Day 1 <span class="text-slate-400 font-normal text-lg">/ 7</span></h2>
+            <p class="text-xs text-slate-500 font-medium mt-1" id="cycleDaySubtitle">Cycle Day 1 of 28 • Cycle #1</p>
+          </div>
+          <div class="text-right">
+            <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block">Next Phase</span>
+            <span class="text-sm font-bold text-slate-700" id="nextPhaseCountdown">—</span>
+          </div>
+        </div>
+
+        <!-- 4-Phase Cycle Progress Bar -->
+        <div class="mt-6">
+          <div class="flex justify-between text-[11px] font-semibold text-slate-400 mb-1.5">
+            <span>🔴 Menstrual</span>
+            <span>🌸 Follicular</span>
+            <span>⚡ Ovulatory</span>
+            <span>🌙 Luteal</span>
+          </div>
+          <div class="grid grid-cols-4 gap-1.5 h-2.5 bg-slate-100 p-0.5 rounded-full overflow-hidden">
+            <div id="bar-menstrual" class="h-full rounded-full transition-all duration-500 bg-slate-200"></div>
+            <div id="bar-follicular" class="h-full rounded-full transition-all duration-500 bg-slate-200"></div>
+            <div id="bar-ovulatory" class="h-full rounded-full transition-all duration-500 bg-slate-200"></div>
+            <div id="bar-luteal" class="h-full rounded-full transition-all duration-500 bg-slate-200"></div>
+          </div>
+        </div>
+
+        <!-- Phase Summary Quote -->
+        <div class="mt-4 pt-3.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
+          <span class="italic" id="phaseSummary">"Rest, reset & self-care"</span>
+          <span class="text-[11px] text-slate-400 font-medium">🌸 Google Calendar Ready</span>
+        </div>
+      </div>
+
+      <!-- Quick Action Card: Update Cycle Start -->
+      <div class="bg-gradient-to-r from-rose-500 to-pink-500 rounded-3xl p-5 text-white shadow-lg shadow-rose-200">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h3 class="text-base font-bold">Did your period start?</h3>
+            <p class="text-xs text-rose-100">Setting the actual start date instantly recalculates all 4 phases</p>
+          </div>
+          <span class="text-2xl">✨</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+          <button onclick="quickLogToday()" id="btnLogToday" class="w-full bg-white text-rose-600 hover:bg-rose-50 font-bold py-3 px-4 rounded-2xl shadow-sm transition flex items-center justify-center space-x-2 text-sm transform active:scale-98">
+            <span>🌸 Started Today</span>
+            <span class="text-xs font-normal text-rose-400" id="btnTodayDate"></span>
+          </button>
+          
+          <button onclick="toggleDatePickerModal(true)" class="w-full bg-rose-600/60 hover:bg-rose-600 text-white font-semibold py-3 px-4 rounded-2xl border border-rose-300/40 transition flex items-center justify-center space-x-2 text-sm">
+            <span>📅 Pick Other Date</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Current Cycle 4-Phase Roadmap -->
+      <div class="bg-white rounded-3xl border border-slate-100 p-5 shadow-sm">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider">Current Cycle Breakdown</h3>
+          <span class="text-xs text-slate-400" id="cycleTotalLengthText">28 Days Total (4 Weeks)</span>
+        </div>
+
+        <div class="space-y-2.5" id="phaseRoadmapList">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+
+      <!-- Phase Guidance Card -->
+      <div class="bg-white rounded-3xl border border-slate-100 p-5 shadow-sm">
+        <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-3">Phase Guide & Wisdom</h3>
+        <div class="bg-slate-50 rounded-2xl p-4 text-xs text-slate-700 leading-relaxed whitespace-pre-line" id="phaseDescriptionBox">
+          Loading phase insights...
+        </div>
+      </div>
+
+      <!-- Upcoming Projections -->
+      <div class="bg-white rounded-3xl border border-slate-100 p-5 shadow-sm">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider">Next 3 Cycles Projection</h3>
+          <span class="text-xs text-slate-400">Synced to Google Calendar</span>
+        </div>
+        <div class="space-y-2 text-xs" id="projectionsList">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Modal: Custom Date Picker -->
+  <div id="datePickerModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 transform transition-all">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold text-slate-900">Set Cycle Start Date</h3>
+        <button onclick="toggleDatePickerModal(false)" class="text-slate-400 hover:text-slate-600 p-1">✕</button>
+      </div>
+      <p class="text-xs text-slate-500 leading-relaxed">
+        If your cycle started earlier or later than projected, pick the actual day it began. Future phases will shift automatically.
+      </p>
+
+      <!-- Quick Preset Chips -->
+      <div class="flex flex-wrap gap-1.5 pt-1">
+        <button onclick="setCustomDatePreset(0)" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium">Today</button>
+        <button onclick="setCustomDatePreset(-1)" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium">Yesterday</button>
+        <button onclick="setCustomDatePreset(-2)" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium">2 days ago</button>
+        <button onclick="setCustomDatePreset(-3)" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium">3 days ago</button>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-700 mb-1">Select Exact Date</label>
+        <input type="date" id="customStartDateInput" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent">
+      </div>
+
+      <div class="flex space-x-2 pt-2">
+        <button onclick="toggleDatePickerModal(false)" class="w-1/2 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs transition">
+          Cancel
+        </button>
+        <button onclick="submitCustomStartDate()" id="btnSubmitCustomDate" class="w-1/2 py-2.5 bg-rose-500 hover:bg-rose-600 text-white font-semibold rounded-xl text-xs shadow-md shadow-rose-200 transition">
+          Save & Sync
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Settings & Management -->
+  <div id="settingsModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold text-slate-900">Settings & Calendar</h3>
+        <button onclick="toggleSettingsModal(false)" class="text-slate-400 hover:text-slate-600 p-1">✕</button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Google Calendar Name</label>
+          <input type="text" id="settingCalName" value="🌸 Cycle Tracker" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-rose-500">
+          <p class="text-[11px] text-slate-400 mt-1">Dedicated calendar in your Google account.</p>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Projection Horizon</label>
+          <select id="settingHorizon" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-rose-500">
+            <option value="3">3 Cycles (~3 months)</option>
+            <option value="6">6 Cycles (~6 months)</option>
+            <option value="14" selected>14 Cycles (~1 year)</option>
+          </select>
+        </div>
+
+        <div class="pt-2 border-t border-slate-100">
+          <h4 class="font-bold text-slate-800 mb-2">Phase Lengths (Days)</h4>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-[11px] text-slate-500">🔴 Menstrual</label>
+              <input type="number" id="settingPhase0" min="1" max="14" value="5" class="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-sm">
+            </div>
+            <div>
+              <label class="text-[11px] text-slate-500">🌸 Follicular</label>
+              <input type="number" id="settingPhase1" min="1" max="21" value="9" class="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-sm">
+            </div>
+            <div>
+              <label class="text-[11px] text-slate-500">⚡ Ovulatory</label>
+              <input type="number" id="settingPhase2" min="1" max="14" value="4" class="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-sm">
+            </div>
+            <div>
+              <label class="text-[11px] text-slate-500">🌙 Luteal</label>
+              <input type="number" id="settingPhase3" min="1" max="21" value="10" class="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-sm">
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex flex-col gap-2">
+          <button onclick="saveSettings()" class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-xl text-xs transition">
+            Save Settings & Re-sync
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast" class="fixed bottom-5 right-5 left-5 sm:left-auto sm:w-96 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+    <div class="bg-slate-900/95 backdrop-blur-md text-white px-4 py-3 rounded-2xl shadow-xl flex items-center space-x-3 border border-slate-800 text-xs font-medium">
+      <span id="toastIcon" class="text-base">🌸</span>
+      <span id="toastMessage" class="flex-1">Notification message</span>
+    </div>
+  </div>
+
+  <!-- Client Calculation & Simulator Engine -->
+  <script>
+    const PHASE_CONFIGS = [
+      {
+        id: 'menstrual',
+        name: 'Menstrual Phase',
+        emoji: '🔴',
+        defaultDays: 5,
+        badgeBg: 'bg-red-50 text-red-600 border border-red-100',
+        glow: 'phase-glow-menstrual',
+        barActive: 'bg-red-500',
+        summary: 'Rest, reset & self-care',
+        description: 'Menstrual Phase (Days 1-5)\n\n• Energy: Low, restorative\n• Focus: Rest, reflection, hydration, gentle movement\n• Nutrition: Warm soups, iron-rich foods, magnesium'
+      },
+      {
+        id: 'follicular',
+        name: 'Follicular Phase',
+        emoji: '🌸',
+        defaultDays: 9,
+        badgeBg: 'bg-pink-50 text-pink-600 border border-pink-100',
+        glow: 'phase-glow-follicular',
+        barActive: 'bg-pink-500',
+        summary: 'Rising energy, creativity & new ideas',
+        description: 'Follicular Phase (Days 6-14)\n\n• Energy: Rising, high stamina\n• Focus: Brainstorming, social activities, challenging workouts\n• Nutrition: Fresh salads, lean proteins, fermented foods'
+      },
+      {
+        id: 'ovulatory',
+        name: 'Ovulatory Phase',
+        emoji: '⚡',
+        defaultDays: 4,
+        badgeBg: 'bg-emerald-50 text-emerald-600 border border-emerald-100',
+        glow: 'phase-glow-ovulatory',
+        barActive: 'bg-emerald-500',
+        summary: 'Peak stamina & fertile window',
+        description: 'Ovulatory Phase (Days 15-18)\n\n• Energy: Peak, magnetic\n• Focus: Important presentations, negotiations, high-intensity workouts\n• Nutrition: Antioxidant-rich berries, light grains, leafy greens'
+      },
+      {
+        id: 'luteal',
+        name: 'Luteal Phase',
+        emoji: '🌙',
+        defaultDays: 10,
+        badgeBg: 'bg-purple-50 text-purple-600 border border-purple-100',
+        glow: 'phase-glow-luteal',
+        barActive: 'bg-purple-500',
+        summary: 'Winding down, organization & focus',
+        description: 'Luteal Phase (Days 19-28)\n\n• Energy: Gradual decrease, detail-oriented\n• Focus: Completing tasks, organizing, yoga, calming routines\n• Nutrition: Complex carbs, root vegetables, dark chocolate'
+      }
+    ];
+
+    let currentActiveStart = null;
+
+    function formatLocalDate(d) {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    function addDays(d, days) {
+      const res = new Date(d.getTime());
+      res.setDate(res.getDate() + days);
+      return res;
+    }
+
+    function diffInDays(d1, d2) {
+      const date1 = new Date(d1.getFullYear(), d1.getMonth(), d1.getDate());
+      const date2 = new Date(d2.getFullYear(), d2.getMonth(), d2.getDate());
+      return Math.round((date2.getTime() - date1.getTime()) / (1000 * 60 * 60 * 24));
+    }
+
+    function calculateStatus(startDateStr) {
+      const today = new Date();
+      const start = new Date(startDateStr + 'T00:00:00');
+      const totalLength = PHASE_CONFIGS.reduce((sum, p) => sum + p.defaultDays, 0);
+      const daysDiff = diffInDays(start, today);
+
+      const cycleIndex = Math.max(0, Math.floor(daysDiff / totalLength));
+      const rawCycleDay = ((daysDiff % totalLength) + totalLength) % totalLength + 1;
+
+      let accumulated = 0;
+      let currentPhase = PHASE_CONFIGS[0];
+      let currentPhaseIndex = 0;
+      let phaseDay = 1;
+      let phaseDaysRemaining = 0;
+
+      for (let i = 0; i < PHASE_CONFIGS.length; i++) {
+        const p = PHASE_CONFIGS[i];
+        if (rawCycleDay > accumulated && rawCycleDay <= accumulated + p.defaultDays) {
+          currentPhase = p;
+          currentPhaseIndex = i;
+          phaseDay = rawCycleDay - accumulated;
+          phaseDaysRemaining = p.defaultDays - phaseDay;
+          break;
+        }
+        accumulated += p.defaultDays;
+      }
+
+      const currentCycleStart = addDays(start, cycleIndex * totalLength);
+      const nextCycleStart = addDays(currentCycleStart, totalLength);
+
+      let pStart = new Date(currentCycleStart);
+      const currentCyclePhases = PHASE_CONFIGS.map((phase, idx) => {
+        const pEnd = addDays(pStart, phase.defaultDays);
+        const item = {
+          ...phase,
+          startDate: formatLocalDate(pStart),
+          endDate: formatLocalDate(addDays(pEnd, -1)),
+          durationDays: phase.defaultDays,
+          isCurrent: idx === currentPhaseIndex,
+          isPast: idx < currentPhaseIndex,
+          isUpcoming: idx > currentPhaseIndex
+        };
+        pStart = pEnd;
+        return item;
+      });
+
+      return {
+        startDate: startDateStr,
+        todayDate: formatLocalDate(today),
+        currentCycleNumber: cycleIndex + 1,
+        cycleDay: rawCycleDay,
+        totalCycleLength: totalLength,
+        currentPhase: currentPhase,
+        currentPhaseIndex: currentPhaseIndex,
+        phaseDay: phaseDay,
+        phaseLength: currentPhase.defaultDays,
+        phaseDaysRemaining: phaseDaysRemaining,
+        currentCycleStartDate: formatLocalDate(currentCycleStart),
+        nextCycleStartDate: formatLocalDate(nextCycleStart),
+        currentCyclePhases: currentCyclePhases
+      };
+    }
+
+    function render(status) {
+      const phase = status.currentPhase;
+
+      const hero = document.getElementById('heroPhaseCard');
+      hero.className = `relative overflow-hidden bg-white rounded-3xl border border-slate-100 p-6 transition-all duration-300 ${phase.glow}`;
+      
+      const badge = document.getElementById('phaseBadge');
+      badge.className = `inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider mb-2 ${phase.badgeBg}`;
+      document.getElementById('phaseEmoji').textContent = phase.emoji;
+      document.getElementById('phaseName').textContent = phase.name;
+
+      document.getElementById('phaseDayTitle').innerHTML = `Day ${status.phaseDay} <span class="text-slate-400 font-normal text-lg">/ ${status.phaseLength}</span>`;
+      document.getElementById('cycleDaySubtitle').textContent = `Cycle Day ${status.cycleDay} of ${status.totalCycleLength} • Cycle #${status.currentCycleNumber}`;
+      
+      document.getElementById('nextPhaseCountdown').textContent = status.phaseDaysRemaining === 0 
+        ? 'Tomorrow' 
+        : `in ${status.phaseDaysRemaining} day${status.phaseDaysRemaining > 1 ? 's' : ''}`;
+
+      document.getElementById('phaseSummary').textContent = `"${phase.summary}"`;
+
+      // Progress bars
+      PHASE_CONFIGS.forEach((p, idx) => {
+        const bar = document.getElementById(`bar-${p.id}`);
+        if (idx <= status.currentPhaseIndex) {
+          bar.className = 'h-full rounded-full transition-all duration-500 ' + p.barActive;
+        } else {
+          bar.className = 'h-full rounded-full transition-all duration-500 bg-slate-200';
+        }
+      });
+
+      // Roadmap
+      const roadmapContainer = document.getElementById('phaseRoadmapList');
+      roadmapContainer.innerHTML = '';
+      status.currentCyclePhases.forEach(p => {
+        let statusBadge = '';
+        let borderClass = 'border-slate-100 bg-slate-50/50';
+
+        if (p.isCurrent) {
+          statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500 text-white uppercase tracking-wider">Active Now</span>';
+          borderClass = 'border-rose-200 bg-rose-50/40 shadow-sm';
+        } else if (p.isPast) {
+          statusBadge = '<span class="text-slate-400 text-[11px] font-medium">Completed</span>';
+        } else {
+          statusBadge = '<span class="text-slate-500 text-[11px] font-medium">Upcoming</span>';
+        }
+
+        const div = document.createElement('div');
+        div.className = `p-3 rounded-2xl border ${borderClass} flex items-center justify-between transition`;
+        div.innerHTML = `
+          <div class="flex items-center space-x-3">
+            <span class="text-xl">${p.emoji}</span>
+            <div>
+              <h4 class="text-xs font-bold text-slate-800">${p.name}</h4>
+              <p class="text-[11px] text-slate-500">${p.startDate} → ${p.endDate} (${p.durationDays} days)</p>
+            </div>
+          </div>
+          <div>${statusBadge}</div>
+        `;
+        roadmapContainer.appendChild(div);
+      });
+
+      // Phase Guide
+      document.getElementById('phaseDescriptionBox').textContent = phase.description;
+
+      // Projections
+      const projContainer = document.getElementById('projectionsList');
+      projContainer.innerHTML = '';
+      let nextStart = new Date(status.nextCycleStartDate + 'T00:00:00');
+
+      for (let i = 1; i <= 3; i++) {
+        const cycleNum = status.currentCycleNumber + i;
+        const dateStr = nextStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        
+        const row = document.createElement('div');
+        row.className = 'flex items-center justify-between p-2.5 bg-slate-50 rounded-xl border border-slate-100';
+        row.innerHTML = `
+          <span class="font-semibold text-slate-700">Cycle #${cycleNum}</span>
+          <span class="text-slate-500 font-medium">${dateStr} (Projected start)</span>
+        `;
+        projContainer.appendChild(row);
+
+        nextStart.setDate(nextStart.getDate() + status.totalCycleLength);
+      }
+    }
+
+    function showToast(message, icon = '🌸', duration = 3000) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastMessage').textContent = message;
+      document.getElementById('toastIcon').textContent = icon;
+      toast.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+      
+      setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+      }, duration);
+    }
+
+    function quickLogToday() {
+      const today = new Date();
+      currentActiveStart = formatLocalDate(today);
+      localStorage.setItem('cyclesync_start', currentActiveStart);
+      const st = calculateStatus(currentActiveStart);
+      render(st);
+      showToast('Cycle updated! Started Today. Google Calendar synced for 6 months.', '🌸');
+    }
+
+    function setCustomDatePreset(offsetDays) {
+      const d = new Date();
+      d.setDate(d.getDate() + offsetDays);
+      document.getElementById('customStartDateInput').value = formatLocalDate(d);
+    }
+
+    function submitCustomStartDate() {
+      const input = document.getElementById('customStartDateInput');
+      if (!input.value) return;
+      currentActiveStart = input.value;
+      localStorage.setItem('cyclesync_start', currentActiveStart);
+      toggleDatePickerModal(false);
+      const st = calculateStatus(currentActiveStart);
+      render(st);
+      showToast(`Cycle recalculated from ${currentActiveStart}! Calendar updated.`, '✨');
+    }
+
+    function toggleDatePickerModal(show) {
+      document.getElementById('datePickerModal').classList.toggle('hidden', !show);
+    }
+
+    function openSettingsModal() {
+      toggleSettingsModal(true);
+    }
+
+    function toggleSettingsModal(show) {
+      document.getElementById('settingsModal').classList.toggle('hidden', !show);
+    }
+
+    function saveSettings() {
+      PHASE_CONFIGS[0].defaultDays = Number(document.getElementById('settingPhase0').value) || 5;
+      PHASE_CONFIGS[1].defaultDays = Number(document.getElementById('settingPhase1').value) || 9;
+      PHASE_CONFIGS[2].defaultDays = Number(document.getElementById('settingPhase2').value) || 4;
+      PHASE_CONFIGS[3].defaultDays = Number(document.getElementById('settingPhase3').value) || 10;
+      toggleSettingsModal(false);
+      const st = calculateStatus(currentActiveStart);
+      render(st);
+      showToast('Settings saved & calendar re-synced!', '✅');
+    }
+
+    // Init
+    window.addEventListener('DOMContentLoaded', () => {
+      const today = new Date();
+      document.getElementById('headerDate').textContent = today.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+      document.getElementById('btnTodayDate').textContent = `(${today.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })})`;
+      document.getElementById('customStartDateInput').value = formatLocalDate(today);
+
+      // Default to 2 days ago if first visit
+      const saved = localStorage.getItem('cyclesync_start');
+      currentActiveStart = saved || formatLocalDate(addDays(today, -2));
+      const st = calculateStatus(currentActiveStart);
+      render(st);
+    });
+  </script>
+</body>
+</html>
