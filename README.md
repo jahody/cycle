@@ -24,7 +24,7 @@ Phases are estimates for a regular 28-day cycle, not medical advice or a method 
 
 ## 🔑 First sign-in
 
-The first time you open the app, Google asks for permission to use your calendar and shows **“Google hasn’t verified this app”**, because CycleSync is a free personal project Google hasn't reviewed. Tap **Advanced → Go to CycleSync (unsafe)** and keep the **Google Calendar** box ticked. The [app page](https://jahody.github.io/cycle/?about) walks through it step by step.
+Google shows a “Google hasn’t verified this app” warning the first time, because CycleSync is a free personal project Google hasn't reviewed. The [app page](https://jahody.github.io/cycle/?about) walks through it step by step.
 
 ## 🔒 Privacy
 

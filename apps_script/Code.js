@@ -58,7 +58,9 @@ var CYCLE_LEN = PHASES.reduce(function(s, p) { return s + p.days; }, 0); // 28
 
 // ─── Web app ─────────────────────────────────────────────────────
 function doGet() {
-  return HtmlService.createHtmlOutputFromFile('Index')
+  var page = HtmlService.createTemplateFromFile('Index');
+  page.appUrl = APP_URL;
+  return page.evaluate()
     .setTitle('CycleSync')
     .setFaviconUrl(APP_URL + 'icon-192.png')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1')
@@ -226,7 +228,7 @@ function getStatus(todayStr) {
 
   var phases = [], from = first;
   PHASES.forEach(function(ph) {
-    phases.push({ id: ph.id, name: ph.name, emoji: ph.emoji, from: dayStr(from), to: dayStr(from + ph.days - 1) });
+    phases.push({ id: ph.id, name: ph.name, emoji: ph.emoji, days: ph.days, from: dayStr(from), to: dayStr(from + ph.days - 1) });
     from += ph.days;
   });
 

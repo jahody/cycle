@@ -2,7 +2,7 @@
   "name": "CycleSync",
   "short_name": "CycleSync",
   "description": "Your menstrual cycle phases as small daily icons in Google Calendar.",
-  "start_url": "./",
+  "start_url": "./?app",
   "scope": "./",
   "display": "standalone",
   "background_color": "#ffffff",

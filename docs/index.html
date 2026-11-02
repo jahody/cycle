@@ -16,9 +16,11 @@
     var APP_URL = 'https://script.google.com/macros/s/AKfycbzl8v69DanQS2M36esK5t91nseIxYEQEmkHBLeT-9hZDMRcnsaTZ2PeFBx0ppz7ZUwq/exec';
     var SEEN_KEY = 'cyclesync.opened';
     // Returning visitors and the installed app go straight to the app; ?about always shows this page.
+    // The installed app opens ./?app (manifest start_url); the display-mode check covers home-screen
+    // shortcuts that open the page's own address instead.
     var seen = false;
     try { seen = localStorage.getItem(SEEN_KEY) === '1'; } catch (e) {}
-    var installed = window.matchMedia('(display-mode: standalone)').matches;
+    var installed = /[?&]app\b/.test(location.search) || window.matchMedia('(display-mode: standalone)').matches;
     if ((seen || installed) && !/[?&]about\b/.test(location.search)) location.replace(APP_URL);
   </script>
   <style>

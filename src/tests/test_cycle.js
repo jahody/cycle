@@ -68,7 +68,12 @@ function loadApp({ authorized = true } = {}) {
         getAuthorizationUrl: () => 'https://script.google.com/authorize',
       }),
     },
-    HtmlService: {},
+    HtmlService: { createTemplateFromFile: file => {
+      const page = { file, settings: {} };
+      const output = new Proxy({}, { get: (_, name) => (...args) => { page.settings[name] = args; return output; } });
+      page.evaluate = () => output;
+      return page;
+    } },
   });
   vm.runInContext(fs.readFileSync(CODE_PATH, 'utf8'), ctx);
 
@@ -103,14 +108,26 @@ console.log('--- Testing apps_script/Code.js (5 / 9 / 4 / 10 day phases) ---');
          'Malformed or impossible dates are rejected');
 }
 
-// Test 2: Status before anything is set up
+// Test 2: The web page
+{
+  const { ctx } = loadApp();
+  const page = ctx.HtmlService.createTemplateFromFile('Index');
+  ctx.HtmlService.createTemplateFromFile = () => page;
+  ctx.doGet();
+  assert(page.file === 'Index' && page.appUrl === 'https://jahody.github.io/cycle/', 'Serves Index.html with the site address filled in');
+  assert(page.settings.setFaviconUrl[0] === 'https://jahody.github.io/cycle/icon-192.png' && page.settings.setTitle[0] === 'CycleSync',
+         'Sets the CycleSync title and tab icon');
+  assert(page.settings.addMetaTag[0] === 'mobile-web-app-capable', 'Can be added to an Android home screen as an app');
+}
+
+// Test 3: Status before anything is set up
 {
   assert(loadApp({ authorized: false }).ctx.getStatus('2026-08-01').authUrl === 'https://script.google.com/authorize',
          'Missing calendar permission → status carries the link to grant it');
   assert(loadApp().ctx.getStatus('2026-08-01').active === false, 'No start date saved → no active cycle');
 }
 
-// Test 3: Cycle status progression (start = 2026-08-01 = cycle day 1)
+// Test 4: Cycle status progression (start = 2026-08-01 = cycle day 1)
 {
   const app = loadApp();
   app.store.LAST_START_DATE = '2026-08-01';
@@ -135,7 +152,7 @@ console.log('--- Testing apps_script/Code.js (5 / 9 / 4 / 10 day phases) ---');
   assert(s.phase.food && s.phase.move, 'Status includes today’s phase tips');
 }
 
-// Test 4: First sync creates the calendar and one icon per day for 14 cycles
+// Test 5: First sync creates the calendar and one icon per day for 14 cycles
 {
   const app = loadApp();
   const s = app.ctx.setStartDate('2026-08-01', '2026-08-01');
@@ -169,7 +186,7 @@ console.log('--- Testing apps_script/Code.js (5 / 9 / 4 / 10 day phases) ---');
          'Every description has the phase details and links back to the app');
 }
 
-// Test 5: A new start date moves the existing series instead of recreating them
+// Test 6: A new start date moves the existing series instead of recreating them
 {
   const app = loadApp();
   app.ctx.setStartDate('2026-08-01', '2026-08-01');
@@ -187,7 +204,7 @@ console.log('--- Testing apps_script/Code.js (5 / 9 / 4 / 10 day phases) ---');
   assert(icons['2026-08-24'].join() === '🔴' && !icons['2026-08-23'], 'Aug 24 is now day 1, with nothing before it');
 }
 
-// Test 6: An older start date fills from the current cycle, not from the past
+// Test 7: An older start date fills from the current cycle, not from the past
 {
   const app = loadApp();
   const s = app.ctx.setStartDate('2026-07-01', '2026-08-24');  // 54 days ago → cycle 2 started Jul 29
@@ -196,7 +213,7 @@ console.log('--- Testing apps_script/Code.js (5 / 9 / 4 / 10 day phases) ---');
   assert(s.cycleDay === 27 && s.phase.id === 'luteal', `Aug 24 is cycle day 27, luteal (got ${s.cycleDay}, ${s.phase.id})`);
 }
 
-// Test 7: Bad start dates are refused before touching the calendar
+// Test 8: Bad start dates are refused before touching the calendar
 {
   const app = loadApp();
   assert(throws(() => app.ctx.setStartDate('2026-08-02', '2026-08-01'), /future/), 'A future start date is refused');
@@ -205,7 +222,7 @@ console.log('--- Testing apps_script/Code.js (5 / 9 / 4 / 10 day phases) ---');
   assert(Object.keys(app.calendars).length === 0, 'No calendar was created by refused requests');
 }
 
-// Test 8: Finding the calendar
+// Test 9: Finding the calendar
 {
   const app = loadApp();
   const old = app.ctx.Calendar.Calendars.insert({ summary: '🌸 Cycle Tracker' }).id;  // from an earlier version
@@ -217,7 +234,7 @@ console.log('--- Testing apps_script/Code.js (5 / 9 / 4 / 10 day phases) ---');
   assert(app.store.CALENDAR_ID !== old && Object.keys(app.theCalendar().events).length === 28, 'Recreates the calendar if the user deleted it');
 }
 
-// Test 9: Removing everything
+// Test 10: Removing everything
 {
   const app = loadApp();
   app.ctx.setStartDate('2026-08-01', '2026-08-01');
