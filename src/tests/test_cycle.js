@@ -115,6 +115,7 @@ console.log('--- Testing apps_script/Code.js (5 / 9 / 4 / 10 day phases) ---');
   ctx.HtmlService.createTemplateFromFile = () => page;
   ctx.doGet();
   assert(page.file === 'Index' && page.appUrl === 'https://jahody.github.io/cycle/', 'Serves Index.html with the site address filled in');
+  assert(page.config === JSON.stringify({ cycleLen: 28, maxPastDays: 365 }), 'Gives the page the cycle length and oldest allowed start date');
   assert(page.settings.setFaviconUrl[0] === 'https://jahody.github.io/cycle/icon-192.png' && page.settings.setTitle[0] === 'CycleSync',
          'Sets the CycleSync title and tab icon');
   assert(page.settings.addMetaTag[0] === 'mobile-web-app-capable', 'Can be added to an Android home screen as an app');

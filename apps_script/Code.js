@@ -60,6 +60,7 @@ var CYCLE_LEN = PHASES.reduce(function(s, p) { return s + p.days; }, 0); // 28
 function doGet() {
   var page = HtmlService.createTemplateFromFile('Index');
   page.appUrl = APP_URL;
+  page.config = JSON.stringify({ cycleLen: CYCLE_LEN, maxPastDays: MAX_PAST_DAYS });
   return page.evaluate()
     .setTitle('CycleSync')
     .setFaviconUrl(APP_URL + 'icon-192.png')

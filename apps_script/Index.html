@@ -22,7 +22,7 @@
     a { color: inherit; }
     button, input { font: inherit; color: inherit; }
     button { cursor: pointer; }
-    button:disabled { opacity: .5; cursor: default; }
+    .flush { margin: 0; }
 
     header { position: sticky; top: 0; z-index: 10; background: var(--card); border-bottom: 1px solid var(--line); }
     .bar-inner, main { max-width: 32rem; margin: 0 auto; padding: 0 16px; }
@@ -120,11 +120,10 @@
     <div class="bar-inner">
       <img class="logo" src="<?= appUrl ?>icon.svg" alt="">
       <h1>CycleSync</h1>
-      <a class="icon-btn" href="https://calendar.google.com/calendar/r" target="_blank" rel="noopener"
-         title="Open Google Calendar" aria-label="Open Google Calendar">
+      <a class="icon-btn" href="https://calendar.google.com/calendar/r" target="_blank" rel="noopener" title="Open Google Calendar">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
       </a>
-      <button class="icon-btn" type="button" data-open="menuDialog" title="Menu" aria-label="Menu">
+      <button class="icon-btn" type="button" data-open="menuDialog" title="Menu">
         <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
       </button>
     </div>
@@ -161,9 +160,9 @@
       <section class="card" id="hero">
         <span class="badge"><span id="phEmoji"></span><span id="phName"></span></span>
         <p class="big">Day <span id="phDay"></span> <small id="phOf"></small></p>
-        <p class="muted" id="cycleText" style="margin:0"></p>
+        <p class="muted flush" id="cycleText"></p>
         <div class="track" id="track" aria-hidden="true"></div>
-        <p class="next" id="nextText" style="margin:0"></p>
+        <p class="next flush" id="nextText"></p>
       </section>
 
       <section class="card accent">
@@ -218,7 +217,7 @@
   <div class="overlay" id="menuDialog" role="dialog" aria-modal="true" aria-labelledby="menuTitle" hidden>
     <div class="sheet">
       <h3 id="menuTitle">CycleSync</h3>
-      <p class="muted" style="margin:0">Your start date is saved privately in your Google account.
+      <p class="muted flush">Your start date is saved privately in your Google account.
         CycleSync only changes its own “🌸 Cycle Tracker” calendar.</p>
       <nav class="menu">
         <a href="<?= appUrl ?>?about" target="_blank" rel="noopener">ℹ️ About, help &amp; install on phone</a>
@@ -232,7 +231,7 @@
   <div class="overlay" id="removeDialog" role="dialog" aria-modal="true" aria-labelledby="removeTitle" hidden>
     <div class="sheet">
       <h3 id="removeTitle">Remove CycleSync?</h3>
-      <p class="muted" style="margin:0">This deletes the “🌸 Cycle Tracker” calendar with all its icons, and your saved start date.</p>
+      <p class="muted flush">This deletes the “🌸 Cycle Tracker” calendar with all its icons, and your saved start date.</p>
       <div class="row">
         <button class="btn secondary" type="button" data-close>Cancel</button>
         <button class="btn danger" type="button" data-action="remove">Remove</button>
@@ -241,7 +240,7 @@
   </div>
 
   <div class="overlay busy" id="busy" hidden>
-    <div class="sheet" role="alert" aria-live="assertive">
+    <div class="sheet" role="alert">
       <div class="spinner"></div>
       <strong id="busyText"></strong>
       <span class="muted">This takes about 20 seconds.</span>
@@ -251,6 +250,7 @@
   <div id="toast" class="hide" role="status" aria-live="polite"></div>
 
   <script>
+    var CONFIG = <?!= config ?>;  // cycle length and oldest allowed start date, from Code.js
     var current = null;  // last active status from the server, null before one exists
     var CHIPS = [['Today', 0], ['Yesterday', -1], ['2 days ago', -2], ['3 days ago', -3], ['1 week ago', -7]];
     var TIPS = [['🔋', 'Energy', 'energy'], ['🏃', 'Movement', 'move'], ['🥗', 'Food', 'food'],
@@ -312,7 +312,7 @@
       $('phName').textContent = ph.name;
       $('phDay').textContent = s.phaseDay;
       $('phOf').textContent = 'of ' + ph.days;
-      $('cycleText').textContent = ph.desc + ' · cycle day ' + s.cycleDay + ' of 28';
+      $('cycleText').textContent = ph.desc + ' · cycle day ' + s.cycleDay + ' of ' + CONFIG.cycleLen;
       $('nextText').textContent = s.next.emoji + ' ' + s.next.text;
 
       var track = $('track');
@@ -325,7 +325,7 @@
       });
       var marker = document.createElement('span');
       marker.className = 'marker';
-      marker.style.left = ((s.cycleDay - 0.5) / 28 * 100) + '%';
+      marker.style.left = ((s.cycleDay - 0.5) / CONFIG.cycleLen * 100) + '%';
       track.appendChild(marker);
 
       var tips = $('tips');
@@ -346,7 +346,7 @@
                  sub: range(p.from, p.to), tag: i === s.phaseIndex ? 'Now' : i < s.phaseIndex ? 'Done' : '' };
       }));
       fillList('periodList', s.nextPeriods.map(function(d) {
-        return { cls: '', icon: '🔴', title: show(d, { weekday: 'short', day: 'numeric', month: 'long' }),
+        return { cls: '', icon: s.phases[0].emoji, title: show(d, { weekday: 'short', day: 'numeric', month: 'long' }),
                  sub: '', tag: 'in ' + daysUntil(d) + ' days' };
       }));
 
@@ -376,7 +376,7 @@
     function placeForm(slotId, submitLabel) {
       var input = $('dateInput');
       input.max = localDay();
-      input.min = localDay(-365);
+      input.min = localDay(-CONFIG.maxPastDays);
       setDate(localDay());
       $('dateSubmit').textContent = submitLabel;
       $(slotId).appendChild($('dateForm'));
