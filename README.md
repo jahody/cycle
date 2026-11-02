@@ -2,6 +2,8 @@
 
 > Automatically project and track your 4-phase menstrual cycle for **1 full year (~14 cycles)** in Google Calendar, with instant recalibration whenever your cycle starts earlier or later than anticipated.
 
+👉 **Open the app: [jahody.github.io/cycle](https://jahody.github.io/cycle/)** (sign in with your Google account; it only ever touches your own calendar)
+
 ---
 
 ## ✨ Features
@@ -54,6 +56,8 @@ For step-by-step instructions with screenshots and troubleshooting for both depl
 │   ├── index.html           # Standalone PWA app with Google OAuth
 │   ├── manifest.json        # Web app manifest for iOS/Android install
 │   └── sw.js                # Service worker for offline caching
+├── docs/
+│   └── index.html           # GitHub Pages: forwards jahody.github.io/cycle to the live app
 ├── wrapper/
 │   └── index.html           # Zero-banner iframe wrapper for Apps Script
 ├── src/
