@@ -11,7 +11,7 @@
   - 🌸 **Follicular Phase (Days 6–14)**: Rising energy, creativity & new ideas (Flamingo)
   - ⚡ **Ovulatory Phase (Days 15–18)**: Peak energy & fertility window (Basil / Green)
   - 🌙 **Luteal Phase (Days 19–28)**: Winding down, organization & focus (Grape / Purple)
-- **📅 1-Year Projections**: Automatically generates 56 continuous phase events spanning 14 cycles ahead in Google Calendar.
+- **📅 1-Year Projections**: Marks every day of the next 14 cycles in Google Calendar with a small phase icon (🔴 🌸 ⚡ 🌙), shown like a weather forecast instead of long coloured bars. *(The standalone PWA still creates 56 coloured phase events.)*
 - **⚡ Instant Recalibration**: Pick your actual period start date anytime — future projections are cleanly removed and regenerated for the next year.
 - **🛡️ Dedicated Secondary Calendar**: Manages a separate `🌸 Cycle Tracker` calendar so your primary work/personal calendar remains uncluttered.
 - **📱 Mobile App & PWA Ready**: Installable to iOS / Android Home Screen for 1-tap logging.

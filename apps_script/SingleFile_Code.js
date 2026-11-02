@@ -15,12 +15,13 @@ var NUM_CYCLES    = 14;   // ~1 year of projections
 var TAG           = '[CycleSync]';
 
 var PHASES = [
-  { id:'menstrual',  name:'Menstrual Phase',  emoji:'🔴', days:5,  color:'11', desc:'Rest & recovery' },
-  { id:'follicular', name:'Follicular Phase', emoji:'🌸', days:9,  color:'4',  desc:'Rising energy' },
-  { id:'ovulatory',  name:'Ovulatory Phase',  emoji:'⚡', days:4,  color:'10', desc:'Peak energy & fertility window' },
-  { id:'luteal',     name:'Luteal Phase',     emoji:'🌙', days:10, color:'3',  desc:'Winding down' }
+  { id:'menstrual',  name:'Menstrual Phase',  emoji:'🔴', days:5,  desc:'Rest & recovery' },
+  { id:'follicular', name:'Follicular Phase', emoji:'🌸', days:9,  desc:'Rising energy' },
+  { id:'ovulatory',  name:'Ovulatory Phase',  emoji:'⚡', days:4,  desc:'Peak energy & fertility window' },
+  { id:'luteal',     name:'Luteal Phase',     emoji:'🌙', days:10, desc:'Winding down' }
 ];
 var CYCLE_LEN = PHASES.reduce(function(s,p){ return s+p.days; }, 0); // 28
+var CAL_COLOR = '#FFFFFF'; // white calendar: each day shows just its icon, no coloured bar
 
 // ─── Web App entry ───────────────────────────────────────────────
 function doGet() {
@@ -55,50 +56,55 @@ function getCal() {
   }
 }
 
-/** Delete all CycleSync events from the calendar */
+/** Delete all CycleSync events (single events and whole series) from the calendar */
 function clearAllEvents() {
   var cal = getCal();
   var from = addD(new Date(), -90);
   var to   = addD(new Date(), 420); // ~14 months ahead
   var evts = cal.getEvents(from, to);
+  var seen = {};
   var count = 0;
   for (var i=0; i<evts.length; i++) {
     var d = evts[i].getDescription() || '';
-    if (d.indexOf(TAG) !== -1) {
+    if (d.indexOf(TAG) === -1) continue;
+    if (evts[i].isRecurringEvent()) {
+      var id = evts[i].getId(); // shared by every occurrence of a series
+      if (seen[id]) continue;
+      seen[id] = true;
+      evts[i].getEventSeries().deleteEventSeries();
+    } else {
       evts[i].deleteEvent();
-      count++;
     }
+    count++;
   }
   return count;
 }
 
-/** Create phase events for NUM_CYCLES cycles starting from startStr */
+/**
+ * Mark every day of NUM_CYCLES cycles starting from startStr with a one-day
+ * all-day event titled with just the phase emoji. Each cycle day is a series
+ * repeating every CYCLE_LEN days, so a year of days takes CYCLE_LEN calls.
+ */
 function createEvents(startStr) {
   var cal = getCal();
+  cal.setColor(CAL_COLOR);
   var start = parse(startStr);
   var created = 0;
+  var cycleDay = 1;
 
-  for (var c = 0; c < NUM_CYCLES; c++) {
-    var cycleStart = addD(start, c * CYCLE_LEN);
-    var dayOffset = 0;
-
-    for (var p = 0; p < PHASES.length; p++) {
-      var ph = PHASES[p];
-      var evtStart = addD(cycleStart, dayOffset);
-      var evtEnd   = addD(cycleStart, dayOffset + ph.days); // exclusive end
-
-      var title = ph.emoji + ' ' + ph.name;
-      var desc  = TAG + '\n' + ph.desc + '\nCycle #' + (c+1);
+  for (var p = 0; p < PHASES.length; p++) {
+    var ph = PHASES[p];
+    for (var d = 1; d <= ph.days; d++, cycleDay++) {
+      var desc = TAG + '\n' + ph.name + ' (day ' + d + ' of ' + ph.days + ')\n' +
+                 ph.desc + '\nCycle day ' + cycleDay + ' of ' + CYCLE_LEN;
+      var rec = CalendarApp.newRecurrence().addDailyRule().interval(CYCLE_LEN).times(NUM_CYCLES);
 
       try {
-        var ev = cal.createAllDayEvent(title, evtStart, evtEnd, { description: desc });
-        ev.setColor(ph.color);
-        created++;
+        cal.createAllDayEventSeries(ph.emoji, addD(start, cycleDay - 1), rec, { description: desc });
+        created += NUM_CYCLES;
       } catch(err) {
         Logger.log('Event error: ' + err);
       }
-
-      dayOffset += ph.days;
     }
   }
   return created;
@@ -194,7 +200,7 @@ function logCycleStart(startDateStr) {
 
   return {
     success: true,
-    message: 'Calendar updated! ' + created + ' phase events created for ~1 year.',
+    message: 'Calendar updated! ' + created + ' days marked with phase icons for ~1 year.',
     deleted: deleted,
     created: created,
     status:  getCycleStatus()
