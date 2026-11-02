@@ -6,7 +6,14 @@
   "scripts": {
     "build": "node src/build_single_file.js",
     "test": "node src/tests/test_cycle.js",
-    "preview": "npx serve app -p 3000"
+    "preview": "npx serve app -p 3000",
+    "gas:status": "clasp status",
+    "gas:pull": "clasp pull",
+    "gas:push": "clasp push",
+    "gas:deploy": "clasp push && clasp redeploy AKfycbzl8v69DanQS2M36esK5t91nseIxYEQEmkHBLeT-9hZDMRcnsaTZ2PeFBx0ppz7ZUwq -d \"Deployed from repo\""
   },
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@google/clasp": "^3.4.1"
+  }
 }
