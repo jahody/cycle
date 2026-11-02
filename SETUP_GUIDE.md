@@ -1,30 +1,31 @@
 # 🌸 CycleSync — Complete Setup & Architecture Guide
 
-CycleSync tracks your menstrual cycle across **4 distinct, biologically accurate phases** (28 days total) and projects them **1 full year ahead (~14 cycles / 56 events)** in Google Calendar. When your period arrives earlier or later than projected, picking your new start date immediately clears upcoming projections and recalculates the next year in real time.
+CycleSync tracks your menstrual cycle across **4 distinct, biologically accurate phases** (28 days total) and marks **every day for 1 full year ahead (~14 cycles)** in Google Calendar with a small phase icon. When your period arrives earlier or later than projected, picking your new start date immediately clears the old projection and recalculates the next year in real time.
 
 ---
 
 ## 🔬 Cycle Phase Specifications
 
-| Phase | Duration | Cycle Days | Google Calendar Color | Focus & Energy |
-|---|---|---|---|---|
-| 🔴 **Menstrual** | **5 days** | Days 1–5 | Tomato (`11`) | Rest, recovery, self-care |
-| 🌸 **Follicular** | **9 days** | Days 6–14 | Flamingo (`4`) | Rising energy, creativity, social |
-| ⚡ **Ovulatory** | **4 days** | Days 15–18 | Basil / Green (`10`) | Peak stamina, fertile window |
-| 🌙 **Luteal** | **10 days** | Days 19–28 | Grape / Purple (`3`) | Winding down, organization, focus |
+| Phase | Duration | Cycle Days | Focus & Energy |
+|---|---|---|---|
+| 🔴 **Menstrual** | **5 days** | Days 1–5 | Rest, recovery, self-care |
+| 🌱 **Follicular** | **9 days** | Days 6–14 | Rising energy, creativity, social |
+| 🦋 **Ovulatory** | **4 days** | Days 15–18 | Peak stamina, fertile window |
+| 🌙 **Luteal** | **10 days** | Days 19–28 | Winding down, organization, focus |
+
+Each day gets one all-day event titled with just its icon, in a white `🌸 Cycle Tracker` calendar, so it reads like a weather forecast. The event description explains the phase (hormones, energy, body, movement, food, focus) and when the next phase or period starts.
 
 ---
 
-## 🛠️ Choose Your Deployment Option
+## 👋 Just Want to Use It?
 
-You have two complete implementations in this repository:
+Open **[jahody.github.io/cycle](https://jahody.github.io/cycle/)**, sign in with your Google account and pick the date your last period started. The app runs as you and only ever touches your own calendar.
 
-1. **[Option A: Google Apps Script Web App](#option-a-google-apps-script-web-app-recommended--zero-hosting)** ⭐ *(Recommended — 2 min setup, 100% free forever, no Google Cloud Console project required)*
-2. **[Option B: Standalone Web App / PWA with Google OAuth](#option-b-standalone-web-app--pwa-with-google-oauth)** *(Custom branded web app with "Sign in with Google" button)*
+The rest of this guide is for running your own copy or working on the code.
 
 ---
 
-# Option A: Google Apps Script Web App (Recommended — Zero Hosting)
+# Run Your Own Copy (Google Apps Script)
 
 Runs 100% on Google's cloud infrastructure. No servers, no Google Cloud project approval, works for **any user** on desktop and mobile.
 
@@ -61,87 +62,57 @@ Runs 100% on Google's cloud infrastructure. No servers, no Google Cloud project 
 
 ---
 
-# Option B: Standalone Web App / PWA with Google OAuth
+# Working on the Code (clasp)
 
-A modern client-side Progressive Web App (PWA) with a native **"Sign in with Google"** button and zero Google Apps Script banners.
+This repository is linked to the live Apps Script project with [clasp](https://github.com/google/clasp), so changes are deployed from the command line instead of by copy-paste.
 
-### Step 1: Create Google Cloud Project
-1. Go to the **[Google Cloud Console](https://console.cloud.google.com)**.
-2. Click the project dropdown at the top ➔ **New Project** ➔ Name: `CycleSync` ➔ **Create**.
-
-### Step 2: Enable Google Calendar API
-1. In the left navigation menu, go to **APIs & Services ➔ Library**.
-2. Search for **Google Calendar API**.
-3. Click on it and click **Enable**.
-
-### Step 3: Configure Google Auth Platform / OAuth Consent Screen
-1. In the left menu, go to **Google Auth Platform** (or **APIs & Services ➔ OAuth consent screen**).
-2. If asked for User Type, select **External** ➔ click **Create**.
-3. On the **Branding / App Information** screen:
-   - **App name**: `CycleSync`
-   - **User support email**: *Select your email from the dropdown*
-   - **App logo**: *(Leave blank)*
-   - **App domain (Home page, Privacy policy, Terms of service)**: ⚠️ **LEAVE ALL 3 BLANK** *(Entering `localhost` or invalid URLs here causes an error!)*
-   - **Developer contact email**: *Type your email address*
-   - Click **Save and Continue**.
-4. On the **Scopes** screen:
-   - Click **Add or Remove Scopes**.
-   - Manually enter or check `https://www.googleapis.com/auth/calendar`
-   - Click **Update** ➔ **Save and Continue**.
-5. On the **Audience / Test Users** screen:
-   - Under **Test users**, click **+ Add users**.
-   - Add your email (and any friends/testers).
-   - Click **Save and Continue**.
-
-### Step 4: Create OAuth 2.0 Web Client ID
-1. In the left menu, go to **Clients** (or **APIs & Services ➔ Credentials**).
-2. Click **+ Create Credentials** (or **+ Create Client**) ➔ choose **OAuth client ID**.
-3. **Application type**: Select **Web application**.
-4. **Name**: `CycleSync Web Client`.
-5. **Authorized JavaScript origins**:
-   - Click **+ Add URI** and add: `http://localhost:3000` (for local testing)
-   - Click **+ Add URI** and add your hosted domain (e.g. `https://cyclesync.pages.dev` or `https://yourdomain.com`).
-6. Click **Create**.
-7. Copy the **Client ID** (e.g. `123456789-abcdef.apps.googleusercontent.com`).
-
-### Step 5: Configure the Frontend
-1. Open [`app/index.html`](app/index.html).
-2. Replace line 186:
-   ```javascript
-   const CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
+### One-time setup
+1. Turn on the **Apps Script API** at [script.google.com/home/usersettings](https://script.google.com/home/usersettings).
+2. Install dependencies and log in:
+   ```bash
+   npm install
+   npx clasp login
    ```
-   with your actual Client ID.
+   On Windows PowerShell with script execution disabled, `npm` and `npx` are blocked; use `npm.cmd` and `npx.cmd` instead. If the browser can't hand the login back to clasp, use `npx clasp login --no-localhost` and paste the address you land on into the terminal.
 
-### Step 6: Deploy Free to Cloudflare Pages or Netlify
-* **Cloudflare Pages**: Go to [pages.cloudflare.com](https://pages.cloudflare.com) ➔ upload the `app/` folder ➔ get `https://cyclesync.pages.dev`.
-* **Netlify Drop**: Go to [app.netlify.com/drop](https://app.netlify.com/drop) ➔ drag and drop the `app/` folder.
-* **Local test**: Run `npx serve app -p 3000` and open `http://localhost:3000`.
+### Everyday commands
+| Command | What it does |
+|---|---|
+| `npm test` | Runs `apps_script/Code.js` against a fake Google Calendar |
+| `npm run build` | Regenerates `SingleFile_Code.js` from `Code.js` + `Index.html` |
+| `npm run gas:status` | Lists the files clasp will upload |
+| `npm run gas:pull` | Downloads the live project's code into `apps_script/` |
+| `npm run gas:deploy` | Uploads the code and points the live web app at a new version (the URL stays the same) |
+
+clasp uploads only `Code.js`, `Index.html` and `appsscript.json` (see `.claspignore`).
+
+### Using your own Apps Script project
+`.clasp.json` holds the script ID and the `gas:deploy` script in `package.json` holds the web app's deployment ID. Replace both with your own (from `npx clasp list-scripts` and `npx clasp list-deployments`).
 
 ---
 
-## 📱 How to Install on Your Phone (PWA / Home Screen)
+## 📱 How to Install on Your Phone (Home Screen)
 
-Once your URL is open on mobile:
+Once the app is open on mobile:
 * **iOS (Safari)**: Tap the **Share** icon (square with arrow up) ➔ scroll down and tap **Add to Home Screen** ➔ Name it **CycleSync** 🌸.
-* **Android (Chrome)**: Tap the **3 dots** (top right) ➔ tap **Add to Home Screen** or **Install App**.
+* **Android (Chrome)**: Tap the **3 dots** (top right) ➔ tap **Add to Home Screen**.
 
-It opens full-screen like a native mobile app with instant 1-tap logging.
+It then opens CycleSync with one tap.
 
 ---
 
 ## ❓ Frequently Asked Questions & Troubleshooting
-
-### Q: Why did Google say "Invalid URL: cannot contain a local host domain"?
-**Fix**: In the Google Cloud Console OAuth Branding settings, leave the *Home page*, *Privacy policy*, and *Terms of service* fields **completely empty**. Google only allows public `https://` URLs in those fields.
-
-### Q: How do I remove the Apps Script banner without building a standalone app?
-**Fix**: Use the provided [`wrapper/index.html`](wrapper/index.html) file. Replace `YOUR_APPS_SCRIPT_WEB_APP_URL_HERE` with your Web App URL and host that single HTML file for free on Netlify Drop or Cloudflare Pages.
 
 ### Q: Does this touch my existing calendar events?
 **No**. CycleSync creates and manages its own dedicated secondary calendar named **`🌸 Cycle Tracker`**. Your personal and work events are never modified, and you can toggle the cycle calendar on/off at any time in Google Calendar.
 
 ### Q: What happens when my period starts earlier or later?
 Tap **"Started Today"** or pick the actual start date using the date picker. CycleSync will automatically:
-1. Scan your `🌸 Cycle Tracker` calendar and remove all future projected phase events.
-2. Schedule fresh phase events for the next 14 cycles (~1 year) based on the new start date.
-3. Keep your past logged cycles intact for your records.
+1. Remove the existing phase icons from your `🌸 Cycle Tracker` calendar, including those before the new start date.
+2. Add fresh daily icons for the next 14 cycles (~1 year) starting from the new date.
+
+### Q: Can I get rid of the "This application was created by a Google Apps Script user" bar?
+Not with Apps Script: Google adds it to every Apps Script web app. Embedding the app in another page hides it, but blocks Google sign-in on iPhone and in browsers that block third-party cookies, so CycleSync doesn't do that.
+
+### Q: Can I use the predicted fertile days for contraception?
+**No**. The phases are estimates based on a fixed 28-day cycle, not a reliable method of contraception.

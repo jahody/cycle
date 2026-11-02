@@ -5,8 +5,10 @@ const codePath = path.join(__dirname, '..', 'apps_script', 'Code.js');
 const indexPath = path.join(__dirname, '..', 'apps_script', 'Index.html');
 const singleFilePath = path.join(__dirname, '..', 'apps_script', 'SingleFile_Code.js');
 
-const codeContent = fs.readFileSync(codePath, 'utf8');
-const htmlContent = fs.readFileSync(indexPath, 'utf8');
+// Normalize line endings: Git on Windows (core.autocrlf) checks files out with
+// CRLF, which would break the doGet() match below and change the output.
+const codeContent = fs.readFileSync(codePath, 'utf8').replace(/\r\n/g, '\n');
+const htmlContent = fs.readFileSync(indexPath, 'utf8').replace(/\r\n/g, '\n');
 
 // The single-file build inlines Index.html directly instead of loading it as a
 // separate HTML file, so the whole app can be pasted into one Code.gs.

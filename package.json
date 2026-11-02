@@ -6,7 +6,6 @@
   "scripts": {
     "build": "node src/build_single_file.js",
     "test": "node src/tests/test_cycle.js",
-    "preview": "npx serve app -p 3000",
     "gas:status": "clasp status",
     "gas:pull": "clasp pull",
     "gas:push": "clasp push",
