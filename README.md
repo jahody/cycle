@@ -8,10 +8,10 @@
 
 - **🔬 4 Biologically Accurate Phases (28 Days Total)**:
   - 🔴 **Menstrual Phase (Days 1–5)**: Rest, recovery & self-care (Tomato)
-  - 🌸 **Follicular Phase (Days 6–14)**: Rising energy, creativity & new ideas (Flamingo)
-  - ⚡ **Ovulatory Phase (Days 15–18)**: Peak energy & fertility window (Basil / Green)
+  - 🌱 **Follicular Phase (Days 6–14)**: Rising energy, creativity & new ideas (Flamingo)
+  - 🦋 **Ovulatory Phase (Days 15–18)**: Peak energy & fertility window (Basil / Green)
   - 🌙 **Luteal Phase (Days 19–28)**: Winding down, organization & focus (Grape / Purple)
-- **📅 1-Year Projections**: Marks every day of the next 14 cycles in Google Calendar with a small phase icon (🔴 🌸 ⚡ 🌙), shown like a weather forecast instead of long coloured bars. *(The standalone PWA still creates 56 coloured phase events.)*
+- **📅 1-Year Projections**: Marks every day of the next 14 cycles in Google Calendar with a small phase icon (🔴 🌱 🦋 🌙), shown like a weather forecast instead of long coloured bars. Clicking a day shows what that phase means for hormones, energy, body, movement, food and focus. *(The standalone PWA still creates 56 coloured phase events with the older 🌸 ⚡ icons.)*
 - **⚡ Instant Recalibration**: Pick your actual period start date anytime — future projections are cleanly removed and regenerated for the next year.
 - **🛡️ Dedicated Secondary Calendar**: Manages a separate `🌸 Cycle Tracker` calendar so your primary work/personal calendar remains uncluttered.
 - **📱 Mobile App & PWA Ready**: Installable to iOS / Android Home Screen for 1-tap logging.

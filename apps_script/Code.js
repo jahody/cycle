@@ -4,8 +4,8 @@
  *
  * 4 phases (28-day cycle):
  *   🔴 Menstrual  (Days 1–5)    ~5 days
- *   🌸 Follicular (Days 6–14)   ~9 days
- *   ⚡ Ovulatory  (Days 15–18)  ~4 days
+ *   🌱 Follicular (Days 6–14)   ~9 days
+ *   🦋 Ovulatory  (Days 15–18)  ~4 days
  *   🌙 Luteal     (Days 19–28)  ~10 days
  */
 
@@ -14,11 +14,39 @@ var CALENDAR_NAME = '🌸 Cycle Tracker';
 var NUM_CYCLES    = 14;   // ~1 year of projections
 var TAG           = '[CycleSync]';
 
+// Icons are red / green / blue / yellow so neighbouring phases are easy to tell
+// apart in the calendar. The extra text fields fill each day's event description.
 var PHASES = [
-  { id:'menstrual',  name:'Menstrual Phase',  emoji:'🔴', days:5,  desc:'Rest & recovery' },
-  { id:'follicular', name:'Follicular Phase', emoji:'🌸', days:9,  desc:'Rising energy' },
-  { id:'ovulatory',  name:'Ovulatory Phase',  emoji:'⚡', days:4,  desc:'Peak energy & fertility window' },
-  { id:'luteal',     name:'Luteal Phase',     emoji:'🌙', days:10, desc:'Winding down' }
+  { id:'menstrual',  name:'Menstrual Phase',  emoji:'🔴', days:5,  desc:'Rest & recovery',
+    hormones:'Estrogen and progesterone are at their lowest; the uterine lining sheds.',
+    energy:  'Low. You may feel tired, inward and more sensitive.',
+    body:    'Cramps, lower back pain, bloating or headaches are common.',
+    move:    'Gentle: walking, yoga, stretching. Rest when you need it.',
+    food:    'Iron-rich foods (leafy greens, legumes, meat), warm meals, magnesium, plenty of water.',
+    focus:   'Reflect, review and plan. Keep the schedule light.' },
+  { id:'follicular', name:'Follicular Phase', emoji:'🌱', days:9,  desc:'Rising energy',
+    hormones:'Estrogen rises as follicles mature in the ovaries.',
+    energy:  'Rising. Mood, motivation and curiosity pick up.',
+    body:    'Workouts feel easier and recovery is quicker.',
+    move:    'Build intensity: cardio, strength training, try something new.',
+    food:    'Fresh, light meals, lean protein, fermented foods.',
+    focus:   'Start projects, brainstorm, learn new things.' },
+  { id:'ovulatory',  name:'Ovulatory Phase',  emoji:'🦋', days:4,  desc:'Peak energy & fertility window',
+    hormones:'Estrogen peaks and a surge of LH releases an egg.',
+    energy:  'Peak. Confident, social and talkative.',
+    body:    'Possible one-sided twinges, higher libido, more cervical fluid.',
+    move:    'Go hard: HIIT, sprints, personal bests.',
+    food:    'Fibre, vegetables and antioxidants; stay hydrated.',
+    focus:   'Presentations, important conversations, meeting people.',
+    note:    'Ovulation usually falls around here; the fertile window starts about 5 days earlier. ' +
+             'These dates are estimates, not a reliable method of contraception.' },
+  { id:'luteal',     name:'Luteal Phase',     emoji:'🌙', days:10, desc:'Winding down',
+    hormones:'Progesterone rises, then both hormones drop before your period.',
+    energy:  'Steady at first, then lower; PMS may show up in the last days.',
+    body:    'Cravings, bloating, breast tenderness or mood swings are common late in the phase.',
+    move:    'Moderate: pilates, lighter strength training, walks.',
+    food:    'Complex carbs, magnesium (nuts, dark chocolate); go easy on salt, caffeine and alcohol.',
+    focus:   'Finish tasks, organise, detail work and admin.' }
 ];
 var CYCLE_LEN = PHASES.reduce(function(s,p){ return s+p.days; }, 0); // 28
 var CAL_COLOR = '#FFFFFF'; // white calendar: each day shows just its icon, no coloured bar
@@ -93,6 +121,34 @@ function clearAllEvents() {
 }
 
 /**
+ * Description for day d of phase p. Every occurrence of a series shares it,
+ * so it only says things that hold in every cycle (no dates).
+ */
+function dayDescription(p, d, cycleDay) {
+  var ph   = PHASES[p];
+  var last = p === PHASES.length - 1;
+  var next = PHASES[(p + 1) % PHASES.length];
+  var inN  = ph.days - d + 1; // days until the next phase starts
+  var when = inN === 1 ? 'tomorrow' : 'in ' + inN + ' days';
+
+  var lines = [
+    ph.emoji + ' ' + ph.name + ' · day ' + d + ' of ' + ph.days + ' · ' + ph.desc,
+    'Cycle day ' + cycleDay + ' of ' + CYCLE_LEN + ' · ' + next.emoji + ' ' +
+      (last ? 'Next period ' : next.name + ' starts ') + when,
+    '',
+    '🧬 Hormones: ' + ph.hormones,
+    '🔋 Energy: '   + ph.energy,
+    '🩺 Body: '     + ph.body,
+    '🏃 Movement: ' + ph.move,
+    '🥗 Food: '     + ph.food,
+    '🎯 Focus: '    + ph.focus
+  ];
+  if (ph.note) lines.push('', 'ℹ️ ' + ph.note);
+  lines.push('', TAG);
+  return lines.join('\n');
+}
+
+/**
  * Mark every day of NUM_CYCLES cycles starting from startStr with a one-day
  * all-day event titled with just the phase emoji. Each cycle day is a series
  * repeating every CYCLE_LEN days, so a year of days takes CYCLE_LEN calls.
@@ -107,8 +163,7 @@ function createEvents(startStr) {
   for (var p = 0; p < PHASES.length; p++) {
     var ph = PHASES[p];
     for (var d = 1; d <= ph.days; d++, cycleDay++) {
-      var desc = TAG + '\n' + ph.name + ' (day ' + d + ' of ' + ph.days + ')\n' +
-                 ph.desc + '\nCycle day ' + cycleDay + ' of ' + CYCLE_LEN;
+      var desc = dayDescription(p, d, cycleDay);
       var rec = CalendarApp.newRecurrence().addDailyRule().interval(CYCLE_LEN).times(NUM_CYCLES);
 
       try {
