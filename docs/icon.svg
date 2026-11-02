@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- CycleSync icon: the 28-day cycle as a ring of the four phase colours
+       (5 / 9 / 4 / 10 days) around a flower. -->
+  <rect width="512" height="512" rx="112" fill="#ffffff"/>
+  <g fill="none" stroke-width="60" transform="rotate(-90 256 256)">
+    <circle cx="256" cy="256" r="168" stroke="#ef4444" stroke-dasharray="178.5 1055.6"/>
+    <circle cx="256" cy="256" r="168" stroke="#22c55e" stroke-dasharray="321.3 1055.6" stroke-dashoffset="-192.5"/>
+    <circle cx="256" cy="256" r="168" stroke="#3b82f6" stroke-dasharray="142.8 1055.6" stroke-dashoffset="-527.8"/>
+    <circle cx="256" cy="256" r="168" stroke="#eab308" stroke-dasharray="357.0 1055.6" stroke-dashoffset="-684.6"/>
+  </g>
+  <g fill="#f43f5e">
+    <circle cx="256" cy="214" r="38"/>
+    <circle cx="296" cy="243" r="38"/>
+    <circle cx="281" cy="290" r="38"/>
+    <circle cx="231" cy="290" r="38"/>
+    <circle cx="216" cy="243" r="38"/>
+  </g>
+  <circle cx="256" cy="256" r="20" fill="#fde68a"/>
+</svg>

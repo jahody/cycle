@@ -2,25 +2,108 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CycleSync 🌸</title>
-  <!--
-    GitHub Pages entry point (jahody.github.io/cycle): forwards to the live
-    Apps Script web app. `npm run gas:deploy` keeps the same /exec URL, so this
-    page does not need updating after a deploy.
-  -->
-  <meta http-equiv="refresh" content="0; url=https://script.google.com/macros/s/AKfycbzl8v69DanQS2M36esK5t91nseIxYEQEmkHBLeT-9hZDMRcnsaTZ2PeFBx0ppz7ZUwq/exec">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌸</text></svg>">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CycleSync</title>
+  <meta name="description" content="Your menstrual cycle phases as small daily icons in Google Calendar, with tips for every day.">
+  <meta name="theme-color" content="#e11d48">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="icon" href="icon-192.png" type="image/png" sizes="192x192">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="manifest" href="manifest.webmanifest">
   <script>
-    location.replace('https://script.google.com/macros/s/AKfycbzl8v69DanQS2M36esK5t91nseIxYEQEmkHBLeT-9hZDMRcnsaTZ2PeFBx0ppz7ZUwq/exec');
+    // The live Apps Script web app. `npm run gas:deploy` keeps this URL the same.
+    var APP_URL = 'https://script.google.com/macros/s/AKfycbzl8v69DanQS2M36esK5t91nseIxYEQEmkHBLeT-9hZDMRcnsaTZ2PeFBx0ppz7ZUwq/exec';
+    var SEEN_KEY = 'cyclesync.opened';
+    // Returning visitors and the installed app go straight to the app; ?about always shows this page.
+    var seen = false;
+    try { seen = localStorage.getItem(SEEN_KEY) === '1'; } catch (e) {}
+    var installed = window.matchMedia('(display-mode: standalone)').matches;
+    if ((seen || installed) && !/[?&]about\b/.test(location.search)) location.replace(APP_URL);
   </script>
   <style>
-    body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
-           font-family: system-ui, -apple-system, sans-serif; background: #f8fafc; color: #111827; }
-    a { color: #e11d48; font-weight: 600; }
+    :root { --bg: #f6f7f9; --card: #fff; --text: #111827; --muted: #6b7280; --line: #e9ebef; --brand: #e11d48; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #0f1115; --card: #1a1d23; --text: #f3f4f6; --muted: #9ca3af; --line: #2a2e36; --brand: #f43f5e; }
+    }
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    body { margin: 0; background: var(--bg); color: var(--text);
+           font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+    main { max-width: 34rem; margin: 0 auto; padding: 40px 16px 48px; display: grid; gap: 16px; }
+    header { text-align: center; }
+    h1 { margin: 12px 0 4px; font-size: 30px; }
+    .lead { margin: 0 auto; max-width: 26rem; color: var(--muted); }
+    .btn { display: block; width: 100%; padding: 14px 16px; border: 0; border-radius: 14px; text-align: center;
+           background: var(--brand); color: #fff; font: inherit; font-weight: 650; text-decoration: none; cursor: pointer; }
+    .btn.secondary { background: var(--card); color: var(--text); border: 1px solid var(--line); }
+    section { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 18px 20px; }
+    h2 { margin: 0 0 8px; font-size: 17px; }
+    ol { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+    p { margin: 0 0 8px; }
+    p:last-child { margin-bottom: 0; }
+    .small { font-size: 13px; color: var(--muted); }
+    a { color: var(--brand); }
   </style>
 </head>
 <body>
-  <p>🌸 Opening CycleSync… <a href="https://script.google.com/macros/s/AKfycbzl8v69DanQS2M36esK5t91nseIxYEQEmkHBLeT-9hZDMRcnsaTZ2PeFBx0ppz7ZUwq/exec">Tap here</a> if nothing happens.</p>
+  <main>
+    <header>
+      <img src="icon.svg" width="96" height="96" alt="">
+      <h1>CycleSync</h1>
+      <p class="lead">Your menstrual cycle phases as small daily icons in Google Calendar (🔴 🌱 🦋 🌙),
+        with tips for every day.</p>
+    </header>
+
+    <a class="btn" id="openApp">Open CycleSync</a>
+    <button class="btn secondary" id="installApp" type="button" hidden>📲 Install on this device</button>
+
+    <section>
+      <h2>First time? What Google will ask</h2>
+      <ol>
+        <li>Sign in with your Google account and tap <b>Review permissions</b>.</li>
+        <li>Google shows <b>“Google hasn’t verified this app”</b>. CycleSync is a free personal project
+          that Google hasn’t reviewed, so tap <b>Advanced</b>, then <b>Go to CycleSync (unsafe)</b>.</li>
+        <li>Keep the <b>Google Calendar</b> box ticked and tap <b>Continue</b>.</li>
+        <li>Pick the day your last period started. CycleSync fills a new “🌸 Cycle Tracker” calendar for the next year.</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2>Put it on your phone</h2>
+      <p><b>Android (Chrome):</b> tap <b>Install on this device</b> above, or ⋮ → <b>Add to Home screen</b>.</p>
+      <p><b>iPhone (Safari):</b> tap Share → <b>Add to Home Screen</b>.</p>
+    </section>
+
+    <section>
+      <h2>Privacy</h2>
+      <p>CycleSync runs inside your own Google account. Your start date is saved privately there, and the only
+        calendar it changes is its own “🌸 Cycle Tracker”. Nothing is sent anywhere else.</p>
+      <p>To stop using it, choose <b>Remove CycleSync from my calendar</b> in the app’s menu, then remove its access at
+        <a href="https://myaccount.google.com/connections">myaccount.google.com/connections</a>.</p>
+      <p class="small">Phases are estimates for a regular 28-day cycle, not medical advice or a method of contraception.
+        <a href="https://github.com/jahody/cycle">Source code</a></p>
+    </section>
+  </main>
+
+  <script>
+    var openLink = document.getElementById('openApp');
+    openLink.href = APP_URL;
+    openLink.addEventListener('click', function() {
+      try { localStorage.setItem(SEEN_KEY, '1'); } catch (e) {}
+    });
+
+    var installPrompt = null, install = document.getElementById('installApp');
+    window.addEventListener('beforeinstallprompt', function(e) {
+      e.preventDefault();
+      installPrompt = e;
+      install.hidden = false;
+    });
+    install.addEventListener('click', function() {
+      installPrompt.prompt();
+      installPrompt = null;
+      install.hidden = true;
+    });
+  </script>
 </body>
 </html>

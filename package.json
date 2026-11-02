@@ -2,14 +2,13 @@
   "name": "cyclesync",
   "version": "1.0.0",
   "private": true,
-  "description": "Project and track your 4-phase menstrual cycle (5/9/4/10 days) one year ahead in Google Calendar, with instant recalibration.",
+  "description": "Marks every day of the next year in Google Calendar with a small icon for its menstrual cycle phase (5/9/4/10 days), with daily tips.",
   "scripts": {
-    "build": "node src/build_single_file.js",
     "test": "node src/tests/test_cycle.js",
     "gas:status": "clasp status",
     "gas:pull": "clasp pull",
-    "gas:push": "clasp push",
-    "gas:deploy": "clasp push && clasp redeploy AKfycbzl8v69DanQS2M36esK5t91nseIxYEQEmkHBLeT-9hZDMRcnsaTZ2PeFBx0ppz7ZUwq -d \"Deployed from repo\""
+    "gas:push": "clasp push --force",
+    "gas:deploy": "clasp push --force && clasp redeploy AKfycbzl8v69DanQS2M36esK5t91nseIxYEQEmkHBLeT-9hZDMRcnsaTZ2PeFBx0ppz7ZUwq -d \"Deployed from repo\""
   },
   "license": "MIT",
   "devDependencies": {

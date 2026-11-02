@@ -2,334 +2,454 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
   <title>CycleSync</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
-    .glow-red    { box-shadow: 0 8px 24px -8px rgba(239,68,68,0.3); }
-    .glow-pink   { box-shadow: 0 8px 24px -8px rgba(236,72,153,0.3); }
-    .glow-green  { box-shadow: 0 8px 24px -8px rgba(34,197,94,0.3); }
-    .glow-purple { box-shadow: 0 8px 24px -8px rgba(168,85,247,0.3); }
+    :root {
+      --bg: #f6f7f9; --card: #ffffff; --text: #111827; --muted: #6b7280; --line: #e9ebef;
+      --brand: #e11d48; --brand-text: #ffffff; --chip: #f1f3f6;
+      --menstrual: #ef4444; --follicular: #22c55e; --ovulatory: #3b82f6; --luteal: #eab308;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #0f1115; --card: #1a1d23; --text: #f3f4f6; --muted: #9ca3af; --line: #2a2e36;
+              --brand: #f43f5e; --chip: #262a32; }
+    }
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    body { margin: 0; background: var(--bg); color: var(--text); -webkit-tap-highlight-color: transparent;
+           font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+    a { color: inherit; }
+    button, input { font: inherit; color: inherit; }
+    button { cursor: pointer; }
+    button:disabled { opacity: .5; cursor: default; }
+
+    header { position: sticky; top: 0; z-index: 10; background: var(--card); border-bottom: 1px solid var(--line); }
+    .bar-inner, main { max-width: 32rem; margin: 0 auto; padding: 0 16px; }
+    .bar-inner { display: flex; align-items: center; gap: 10px; height: 56px; }
+    .bar-inner h1 { font-size: 17px; margin: 0; flex: 1; }
+    .logo { width: 28px; height: 28px; }
+    .icon-btn { display: grid; place-items: center; width: 40px; height: 40px; border: 0; border-radius: 12px;
+                background: none; color: var(--muted); text-decoration: none; }
+    .icon-btn:hover { background: var(--chip); color: var(--text); }
+    .icon-btn svg { width: 22px; height: 22px; }
+
+    main { padding-top: 16px; padding-bottom: 32px; display: grid; gap: 14px; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 18px; }
+    .card h2 { font-size: 20px; margin: 0 0 6px; }
+    .card h3 { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+    .muted { color: var(--muted); font-size: 13px; }
+    .center { text-align: center; }
+    .stack { display: grid; gap: 12px; }
+
+    .btn { display: block; width: 100%; padding: 13px 16px; border: 0; border-radius: 14px; text-align: center;
+           background: var(--brand); color: var(--brand-text); font-weight: 650; text-decoration: none; }
+    .btn.secondary { background: var(--chip); color: var(--text); }
+    .btn.danger { background: transparent; color: #dc2626; border: 1px solid currentColor; }
+    .row { display: flex; gap: 10px; }
+    .row > * { flex: 1; }
+
+    .skeleton { height: 180px; animation: pulse 1.2s ease-in-out infinite; }
+    @keyframes pulse { 50% { opacity: .5; } }
+
+    /* Date form */
+    input[type=date] { width: 100%; padding: 12px 14px; border: 1px solid var(--line); border-radius: 14px;
+                       background: var(--card); min-height: 48px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chips button { border: 0; border-radius: 999px; padding: 7px 12px; background: var(--chip); font-size: 13px; }
+    .chips button[aria-pressed=true] { background: var(--brand); color: var(--brand-text); }
+
+    /* Dashboard */
+    .badge { display: inline-flex; gap: 6px; align-items: center; padding: 4px 10px; border-radius: 999px;
+             font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+             color: var(--ph); background: color-mix(in srgb, var(--ph) 14%, var(--card)); }
+    .big { font-size: 34px; font-weight: 800; margin: 8px 0 0; }
+    .big small { font-size: 16px; font-weight: 500; color: var(--muted); }
+    .track { position: relative; display: flex; gap: 3px; height: 10px; margin: 14px 0 8px; }
+    .track span { border-radius: 99px; }
+    .marker { position: absolute; top: -4px; width: 18px; height: 18px; margin-left: -9px; border-radius: 50%;
+              background: var(--card); border: 4px solid var(--text); }
+    .next { font-weight: 600; }
+    .tips { display: grid; gap: 10px; margin: 0; }
+    .tips div { display: grid; grid-template-columns: 26px 1fr; }
+    .tips dt { grid-row: span 2; font-size: 18px; }
+    .tips dd { margin: 0; font-size: 14px; }
+    .tips .label { font-size: 12px; font-weight: 700; color: var(--muted); }
+    .note { margin: 12px 0 0; padding: 10px 12px; border-radius: 12px; background: var(--chip); font-size: 13px; }
+    .accent { background: var(--brand); border-color: transparent; color: var(--brand-text); }
+    .accent h3 { color: inherit; opacity: .85; }
+    .accent p { margin: 0 0 12px; opacity: .9; font-size: 14px; }
+    .accent .btn { background: #fff; color: #be123c; }
+    .accent .btn.secondary { background: rgba(255,255,255,.18); color: #fff; }
+    .list { display: grid; gap: 8px; }
+    .item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 14px; background: var(--chip); }
+    .item .grow { flex: 1; }
+    .item .title { font-weight: 600; font-size: 14px; }
+    .item.now { outline: 2px solid var(--ph); background: color-mix(in srgb, var(--ph) 10%, var(--card)); }
+    .tag { font-size: 12px; color: var(--muted); }
+    .item.now .tag { color: var(--ph); font-weight: 700; }
+    .filled { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .filled .btn { width: auto; padding: 8px 14px; font-size: 14px; }
+
+    /* Dialogs, busy overlay, toast */
+    .overlay { position: fixed; inset: 0; z-index: 20; display: grid; align-items: end; justify-items: center;
+               background: rgba(0,0,0,.45); padding: 12px; }
+    @media (min-width: 560px) { .overlay { align-items: center; } }
+    .sheet { width: 100%; max-width: 26rem; background: var(--card); border-radius: 22px; padding: 20px; display: grid; gap: 14px; }
+    .sheet h3 { margin: 0; font-size: 18px; }
+    .menu a, .menu button { display: block; width: 100%; padding: 12px 4px; border: 0; border-bottom: 1px solid var(--line);
+                            background: none; text-align: left; text-decoration: none; font-size: 15px; }
+    .busy { align-items: center; }
+    .busy .sheet { max-width: 18rem; text-align: center; gap: 6px; }
+    .spinner { width: 40px; height: 40px; margin: 4px auto 8px; border-radius: 50%; border: 4px solid var(--line);
+               border-top-color: var(--brand); animation: spin .9s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #toast { position: fixed; left: 16px; right: 16px; bottom: 16px; z-index: 30; max-width: 26rem; margin: 0 auto;
+             padding: 12px 16px; border-radius: 14px; background: #111827; color: #fff; font-size: 14px;
+             box-shadow: 0 8px 24px rgba(0,0,0,.25); transition: opacity .25s, transform .25s; }
+    #toast.hide { opacity: 0; transform: translateY(12px); pointer-events: none; }
+
+    .ph-menstrual  { --ph: var(--menstrual); }
+    .ph-follicular { --ph: var(--follicular); }
+    .ph-ovulatory  { --ph: var(--ovulatory); }
+    .ph-luteal     { --ph: color-mix(in srgb, var(--luteal) 85%, #000); }
   </style>
 </head>
-<body class="bg-gray-50 text-gray-900 min-h-screen antialiased">
-
-  <!-- Header -->
-  <header class="bg-white border-b border-gray-100 sticky top-0 z-30">
-    <div class="max-w-lg mx-auto px-4 py-3 flex items-center justify-between">
-      <div class="flex items-center space-x-2">
-        <span class="text-xl">🌸</span>
-        <h1 class="text-base font-bold text-gray-900">CycleSync</h1>
-      </div>
-      <div class="flex items-center space-x-1">
-        <a href="https://calendar.google.com" target="_blank" class="p-2 text-gray-400 hover:text-gray-700 rounded-lg text-xs">📅</a>
-        <button onclick="showSettings()" class="p-2 text-gray-400 hover:text-gray-700 rounded-lg">⚙️</button>
-      </div>
+<body>
+  <header>
+    <div class="bar-inner">
+      <img class="logo" src="https://jahody.github.io/cycle/icon.svg" alt="">
+      <h1>CycleSync</h1>
+      <a class="icon-btn" href="https://calendar.google.com/calendar/r" target="_blank" rel="noopener"
+         title="Open Google Calendar" aria-label="Open Google Calendar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+      </a>
+      <button class="icon-btn" type="button" data-open="menuDialog" title="Menu" aria-label="Menu">
+        <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+      </button>
     </div>
   </header>
 
-  <main class="max-w-lg mx-auto px-4 py-5 space-y-4">
+  <main>
+    <section id="loadingView" class="card skeleton" aria-label="Loading"></section>
 
-    <!-- Loading -->
-    <div id="loading" class="animate-pulse space-y-3">
-      <div class="h-44 bg-gray-200 rounded-2xl"></div>
-      <div class="h-24 bg-gray-200 rounded-2xl"></div>
-    </div>
+    <section id="errorView" class="card stack center" hidden>
+      <h2>Couldn’t load CycleSync</h2>
+      <p class="muted" id="errorText"></p>
+      <button class="btn" type="button" data-action="reload">Try again</button>
+    </section>
 
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- START SCREEN: no cycle logged yet                          -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <div id="startScreen" class="hidden">
-      <div class="bg-white rounded-2xl border border-gray-100 p-6 text-center space-y-5">
-        <div class="text-4xl">🌸</div>
-        <h2 class="text-xl font-bold">When did your last period start?</h2>
-        <p class="text-sm text-gray-500">Pick the date and we'll fill your Google Calendar with all 4 cycle phases for the next year.</p>
+    <section id="authView" class="card stack center" hidden>
+      <h2>Allow calendar access</h2>
+      <p class="muted">CycleSync needs access to Google Calendar to keep its own “🌸 Cycle Tracker” calendar.
+        It doesn’t change your other calendars. On Google’s screen, keep the calendar box ticked.</p>
+      <a class="btn" id="authLink" target="_blank" rel="noopener">Allow access</a>
+      <button class="btn secondary" type="button" data-action="reload">I’ve allowed it</button>
+    </section>
 
-        <div class="space-y-3 text-left">
-          <input type="date" id="startDateInput"
-                 class="w-full px-4 py-3 border border-gray-200 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-rose-500">
-
-          <div class="flex flex-wrap gap-2">
-            <button onclick="setPreset(0)"  class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg text-xs font-medium">Today</button>
-            <button onclick="setPreset(-1)" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg text-xs font-medium">Yesterday</button>
-            <button onclick="setPreset(-2)" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg text-xs font-medium">2 days ago</button>
-            <button onclick="setPreset(-3)" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg text-xs font-medium">3 days ago</button>
-            <button onclick="setPreset(-7)" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg text-xs font-medium">1 week ago</button>
-          </div>
-
-          <button onclick="submitStart()" id="btnSubmit"
-                  class="w-full py-3 bg-rose-500 hover:bg-rose-600 text-white font-semibold rounded-xl text-sm transition active:scale-[0.98]">
-            Set Start Date & Sync Calendar
-          </button>
-        </div>
+    <section id="startView" class="card stack" hidden>
+      <div class="center">
+        <img src="https://jahody.github.io/cycle/icon.svg" alt="" width="72" height="72">
+        <h2>When did your last period start?</h2>
+        <p class="muted">CycleSync marks every day of the next year with a small phase icon,
+          in a separate “🌸 Cycle Tracker” calendar.</p>
       </div>
-    </div>
+      <div id="startSlot"></div>
+    </section>
 
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- DASHBOARD: active cycle                                    -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <div id="dashboard" class="hidden space-y-4">
+    <div id="dashView" class="stack" hidden>
+      <section class="card" id="hero">
+        <span class="badge"><span id="phEmoji"></span><span id="phName"></span></span>
+        <p class="big">Day <span id="phDay"></span> <small id="phOf"></small></p>
+        <p class="muted" id="cycleText" style="margin:0"></p>
+        <div class="track" id="track" aria-hidden="true"></div>
+        <p class="next" id="nextText" style="margin:0"></p>
+      </section>
 
-      <!-- Current Phase Hero -->
-      <div id="heroCard" class="bg-white rounded-2xl border border-gray-100 p-5">
-        <div class="flex items-start justify-between">
-          <div>
-            <div id="phaseBadge" class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wide mb-1.5">
-              <span id="phaseEmoji"></span>
-              <span id="phaseName"></span>
-            </div>
-            <h2 class="text-2xl font-extrabold" id="dayTitle"></h2>
-            <p class="text-xs text-gray-500 mt-0.5" id="cycleInfo"></p>
-          </div>
-          <div class="text-right">
-            <span class="text-[10px] font-semibold uppercase text-gray-400">Next phase</span>
-            <div class="text-sm font-bold text-gray-700" id="countdown"></div>
-          </div>
+      <section class="card accent">
+        <h3>Period started?</h3>
+        <p>Log the day it started to recalculate the year ahead.</p>
+        <div class="row">
+          <button class="btn" type="button" data-action="today">Today</button>
+          <button class="btn secondary" type="button" data-open="dateDialog">Another day</button>
         </div>
+      </section>
 
-        <!-- Progress -->
-        <div class="mt-4 grid grid-cols-4 gap-1 h-2 rounded-full overflow-hidden bg-gray-100">
-          <div id="bar0" class="h-full rounded-full transition-all"></div>
-          <div id="bar1" class="h-full rounded-full transition-all"></div>
-          <div id="bar2" class="h-full rounded-full transition-all"></div>
-          <div id="bar3" class="h-full rounded-full transition-all"></div>
-        </div>
-        <div class="mt-1 grid grid-cols-4 text-[10px] text-gray-400 font-medium text-center">
-          <span>🔴 Menstrual</span>
-          <span>🌱 Follicular</span>
-          <span>🦋 Ovulatory</span>
-          <span>🌙 Luteal</span>
-        </div>
-      </div>
+      <section class="card">
+        <h3>Today</h3>
+        <dl class="tips" id="tips"></dl>
+        <p class="note" id="note" hidden></p>
+      </section>
 
-      <!-- Update Cycle -->
-      <div class="bg-rose-500 rounded-2xl p-4 text-white">
-        <h3 class="text-sm font-bold mb-1">Period started?</h3>
-        <p class="text-xs text-rose-100 mb-3">Recalculates all phases for the next year.</p>
-        <div class="flex gap-2">
-          <button onclick="logToday()" class="flex-1 py-2.5 bg-white text-rose-600 font-bold rounded-xl text-xs active:scale-[0.98]">
-            🌸 Started Today
-          </button>
-          <button onclick="showDatePicker()" class="flex-1 py-2.5 bg-rose-600/60 hover:bg-rose-600 text-white font-semibold rounded-xl text-xs border border-rose-400/30">
-            📅 Pick Date
-          </button>
-        </div>
-      </div>
+      <section class="card">
+        <h3>This cycle</h3>
+        <div class="list" id="phaseList"></div>
+      </section>
 
-      <!-- Current Cycle Phases -->
-      <div class="bg-white rounded-2xl border border-gray-100 p-4">
-        <h3 class="text-xs font-bold text-gray-900 uppercase tracking-wider mb-3">This Cycle</h3>
-        <div id="phaseList" class="space-y-2"></div>
-      </div>
+      <section class="card">
+        <h3>Next periods</h3>
+        <div class="list" id="periodList"></div>
+      </section>
 
-      <!-- Upcoming Cycles -->
-      <div class="bg-white rounded-2xl border border-gray-100 p-4">
-        <h3 class="text-xs font-bold text-gray-900 uppercase tracking-wider mb-3">Upcoming Cycles</h3>
-        <div id="upcomingList" class="space-y-1.5"></div>
-      </div>
+      <section class="card filled" id="filledCard">
+        <span class="muted" id="filledText"></span>
+        <button class="btn" type="button" data-action="extend" id="extendBtn" hidden>Extend</button>
+      </section>
     </div>
   </main>
 
-  <!-- Date Picker Modal -->
-  <div id="dateModal" class="fixed inset-0 z-50 bg-black/40 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4">
-      <div class="flex justify-between items-center">
-        <h3 class="font-bold">Set Cycle Start Date</h3>
-        <button onclick="hideDatePicker()" class="text-gray-400 hover:text-gray-600">✕</button>
-      </div>
-      <div class="flex flex-wrap gap-1.5">
-        <button onclick="setModalPreset(0)"  class="px-2.5 py-1 bg-gray-100 hover:bg-gray-200 rounded-lg text-xs">Today</button>
-        <button onclick="setModalPreset(-1)" class="px-2.5 py-1 bg-gray-100 hover:bg-gray-200 rounded-lg text-xs">Yesterday</button>
-        <button onclick="setModalPreset(-2)" class="px-2.5 py-1 bg-gray-100 hover:bg-gray-200 rounded-lg text-xs">2 days ago</button>
-        <button onclick="setModalPreset(-3)" class="px-2.5 py-1 bg-gray-100 hover:bg-gray-200 rounded-lg text-xs">3 days ago</button>
-      </div>
-      <input type="date" id="modalDateInput" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-rose-500">
-      <div class="flex gap-2">
-        <button onclick="hideDatePicker()" class="flex-1 py-2.5 bg-gray-100 text-gray-700 font-semibold rounded-xl text-xs">Cancel</button>
-        <button onclick="submitModal()" class="flex-1 py-2.5 bg-rose-500 text-white font-semibold rounded-xl text-xs">Save & Sync</button>
+  <!-- One date form, moved into the start screen or the date dialog when shown -->
+  <div hidden>
+    <form id="dateForm" class="stack">
+      <input type="date" id="dateInput" required aria-label="Period start date">
+      <div class="chips" id="chips"></div>
+      <button class="btn" type="submit" id="dateSubmit"></button>
+    </form>
+  </div>
+
+  <div class="overlay" id="dateDialog" role="dialog" aria-modal="true" aria-labelledby="dateTitle" hidden>
+    <div class="sheet">
+      <h3 id="dateTitle">When did your period start?</h3>
+      <div id="dialogSlot"></div>
+      <button class="btn secondary" type="button" data-close>Cancel</button>
+    </div>
+  </div>
+
+  <div class="overlay" id="menuDialog" role="dialog" aria-modal="true" aria-labelledby="menuTitle" hidden>
+    <div class="sheet">
+      <h3 id="menuTitle">CycleSync</h3>
+      <p class="muted" style="margin:0">Your start date is saved privately in your Google account.
+        CycleSync only changes its own “🌸 Cycle Tracker” calendar.</p>
+      <nav class="menu">
+        <a href="https://jahody.github.io/cycle/?about" target="_blank" rel="noopener">ℹ️ About, help &amp; install on phone</a>
+        <a href="https://myaccount.google.com/connections" target="_blank" rel="noopener">🔒 Manage CycleSync’s access</a>
+        <button type="button" data-open="removeDialog">🗑️ Remove CycleSync from my calendar</button>
+      </nav>
+      <button class="btn secondary" type="button" data-close>Close</button>
+    </div>
+  </div>
+
+  <div class="overlay" id="removeDialog" role="dialog" aria-modal="true" aria-labelledby="removeTitle" hidden>
+    <div class="sheet">
+      <h3 id="removeTitle">Remove CycleSync?</h3>
+      <p class="muted" style="margin:0">This deletes the “🌸 Cycle Tracker” calendar with all its icons, and your saved start date.</p>
+      <div class="row">
+        <button class="btn secondary" type="button" data-close>Cancel</button>
+        <button class="btn danger" type="button" data-action="remove">Remove</button>
       </div>
     </div>
   </div>
 
-  <!-- Settings Modal -->
-  <div id="settingsModal" class="fixed inset-0 z-50 bg-black/40 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4">
-      <div class="flex justify-between items-center">
-        <h3 class="font-bold">Settings</h3>
-        <button onclick="hideSettings()" class="text-gray-400 hover:text-gray-600">✕</button>
-      </div>
-      <div class="text-xs space-y-3">
-        <p class="text-gray-500">Cycle data is stored privately in your Google account.</p>
-        <button onclick="doReset()" class="w-full py-2.5 bg-red-50 hover:bg-red-100 text-red-600 font-semibold rounded-xl text-xs">
-          Clear Calendar & Reset Data
-        </button>
-      </div>
+  <div class="overlay busy" id="busy" hidden>
+    <div class="sheet" role="alert" aria-live="assertive">
+      <div class="spinner"></div>
+      <strong id="busyText"></strong>
+      <span class="muted">This takes about 20 seconds.</span>
     </div>
   </div>
 
-  <!-- Toast -->
-  <div id="toast" class="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-4 sm:w-80 z-50 translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
-    <div class="bg-gray-900 text-white px-4 py-3 rounded-xl shadow-lg text-xs font-medium flex items-center space-x-2">
-      <span id="toastIcon">🌸</span>
-      <span id="toastMsg" class="flex-1"></span>
-    </div>
-  </div>
+  <div id="toast" class="hide" role="status" aria-live="polite"></div>
 
   <script>
-    var state = null;
-    var COLORS = {
-      menstrual:  { badge:'bg-red-50 text-red-600',    glow:'glow-red',    bar:'bg-red-500' },
-      follicular: { badge:'bg-pink-50 text-pink-600',  glow:'glow-pink',   bar:'bg-pink-500' },
-      ovulatory:  { badge:'bg-green-50 text-green-600',glow:'glow-green',  bar:'bg-green-500' },
-      luteal:     { badge:'bg-purple-50 text-purple-600',glow:'glow-purple',bar:'bg-purple-500' }
-    };
+    var current = null;  // last active status from the server, null before one exists
+    var CHIPS = [['Today', 0], ['Yesterday', -1], ['2 days ago', -2], ['3 days ago', -3], ['1 week ago', -7]];
+    var TIPS = [['🔋', 'Energy', 'energy'], ['🏃', 'Movement', 'move'], ['🥗', 'Food', 'food'],
+                ['🎯', 'Focus', 'focus'], ['🧬', 'Hormones', 'hormones'], ['🩺', 'Body', 'body']];
+    var EXTEND_WITHIN_DAYS = 56;
+    var $ = function(id) { return document.getElementById(id); };
 
-    // ── Init ──────────────────────────────────────────────────────
-    window.addEventListener('DOMContentLoaded', function() {
-      var d = new Date();
-      document.getElementById('startDateInput').value = fmtLocal(d);
-      document.getElementById('modalDateInput').value = fmtLocal(d);
-      fetchStatus();
+    // ── Dates ('yyyy-mm-dd' in the browser's own time zone) ──────
+    function localDay(offset) {
+      var d = new Date(); d.setDate(d.getDate() + (offset || 0));
+      return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+    function asDate(s) { return new Date(s + 'T00:00:00'); }
+    function daysUntil(s) { return Math.round((asDate(s) - asDate(localDay())) / 86400000); }
+    function show(s, opts) { return asDate(s).toLocaleDateString('en-GB', opts); }
+    function range(from, to) {
+      var sameMonth = from.slice(0, 7) === to.slice(0, 7);
+      return (sameMonth ? asDate(from).getDate() : show(from, { day: 'numeric', month: 'short' })) +
+             ' – ' + show(to, { day: 'numeric', month: 'short' });
+    }
+
+    // ── Server calls ─────────────────────────────────────────────
+    /** Call a server function. With busyText the page is locked until it answers. */
+    function call(fn, args, onDone, busyText) {
+      if (busyText) { $('busyText').textContent = busyText; $('busy').hidden = false; }
+      var runner = google.script.run
+        .withSuccessHandler(function(result) { $('busy').hidden = true; onDone(result); })
+        .withFailureHandler(function(err) {
+          $('busy').hidden = true;
+          var msg = String((err && err.message) || err).replace(/^(Exception|Error):\s*/, '');
+          if ($('loadingView').hidden) toast('⚠️ ' + msg);
+          else { $('errorText').textContent = msg; showView('errorView'); }
+        });
+      runner[fn].apply(runner, args);
+    }
+    function load() { showView('loadingView'); call('getStatus', [localDay()], render); }
+    function setStart(dateStr, message) {
+      closeDialogs();
+      call('setStartDate', [dateStr, localDay()], function(s) { render(s); toast(message); }, 'Updating your calendar…');
+    }
+
+    // ── Rendering ────────────────────────────────────────────────
+    function showView(id) {
+      ['loadingView', 'errorView', 'authView', 'startView', 'dashView'].forEach(function(v) { $(v).hidden = v !== id; });
+    }
+
+    function render(s) {
+      current = s.active ? s : null;
+      if (s.authUrl) { $('authLink').href = s.authUrl; showView('authView'); return; }
+      if (!s.active) { placeForm('startSlot', 'Fill my calendar'); showView('startView'); return; }
+      renderDashboard(s);
+      showView('dashView');
+    }
+
+    function renderDashboard(s) {
+      var ph = s.phase;
+      $('hero').className = 'card ph-' + ph.id;
+      $('phEmoji').textContent = ph.emoji;
+      $('phName').textContent = ph.name;
+      $('phDay').textContent = s.phaseDay;
+      $('phOf').textContent = 'of ' + ph.days;
+      $('cycleText').textContent = ph.desc + ' · cycle day ' + s.cycleDay + ' of 28';
+      $('nextText').textContent = s.next.emoji + ' ' + s.next.text;
+
+      var track = $('track');
+      track.innerHTML = '';
+      s.phases.forEach(function(p, i) {
+        var seg = document.createElement('span');
+        seg.className = 'ph-' + p.id;
+        seg.style.cssText = 'flex:' + (daysBetween(p.from, p.to) + 1) + ';background:var(--ph);opacity:' + (i <= s.phaseIndex ? 1 : .3);
+        track.appendChild(seg);
+      });
+      var marker = document.createElement('span');
+      marker.className = 'marker';
+      marker.style.left = ((s.cycleDay - 0.5) / 28 * 100) + '%';
+      track.appendChild(marker);
+
+      var tips = $('tips');
+      tips.innerHTML = '';
+      TIPS.forEach(function(t) {
+        var row = document.createElement('div');
+        row.innerHTML = '<dt></dt><dd class="label"></dd><dd></dd>';
+        row.children[0].textContent = t[0];
+        row.children[1].textContent = t[1];
+        row.children[2].textContent = ph[t[2]];
+        tips.appendChild(row);
+      });
+      $('note').hidden = !ph.note;
+      $('note').textContent = ph.note ? 'ℹ️ ' + ph.note : '';
+
+      fillList('phaseList', s.phases.map(function(p, i) {
+        return { cls: 'ph-' + p.id + (i === s.phaseIndex ? ' now' : ''), icon: p.emoji, title: p.name,
+                 sub: range(p.from, p.to), tag: i === s.phaseIndex ? 'Now' : i < s.phaseIndex ? 'Done' : '' };
+      }));
+      fillList('periodList', s.nextPeriods.map(function(d) {
+        return { cls: '', icon: '🔴', title: show(d, { weekday: 'short', day: 'numeric', month: 'long' }),
+                 sub: '', tag: 'in ' + daysUntil(d) + ' days' };
+      }));
+
+      $('filledCard').hidden = !s.filledUntil;
+      if (s.filledUntil) {
+        $('filledText').textContent = 'Calendar filled until ' + show(s.filledUntil, { day: 'numeric', month: 'short', year: 'numeric' });
+        $('extendBtn').hidden = daysUntil(s.filledUntil) > EXTEND_WITHIN_DAYS;
+      }
+    }
+
+    function daysBetween(a, b) { return Math.round((asDate(b) - asDate(a)) / 86400000); }
+
+    function fillList(id, items) {
+      var list = $(id);
+      list.innerHTML = '';
+      items.forEach(function(it) {
+        var row = document.createElement('div');
+        row.className = 'item ' + it.cls;
+        row.innerHTML = '<span></span><div class="grow"><div class="title"></div><div class="muted"></div></div><span class="tag"></span>';
+        row.children[0].textContent = it.icon;
+        row.querySelector('.title').textContent = it.title;
+        row.querySelector('.muted').textContent = it.sub;
+        row.querySelector('.tag').textContent = it.tag;
+        list.appendChild(row);
+      });
+    }
+
+    // ── Date form ────────────────────────────────────────────────
+    function placeForm(slotId, submitLabel) {
+      var input = $('dateInput');
+      input.max = localDay();
+      input.min = localDay(-365);
+      setDate(localDay());
+      $('dateSubmit').textContent = submitLabel;
+      $(slotId).appendChild($('dateForm'));
+    }
+    function setDate(value) {
+      $('dateInput').value = value;
+      Array.prototype.forEach.call($('chips').children, function(chip) {
+        chip.setAttribute('aria-pressed', String(localDay(+chip.dataset.offset) === value));
+      });
+    }
+
+    // ── Dialogs and toast ────────────────────────────────────────
+    function openDialog(id) {
+      closeDialogs();
+      if (id === 'dateDialog') placeForm('dialogSlot', 'Update calendar');
+      $(id).hidden = false;
+    }
+    function closeDialogs() {
+      ['dateDialog', 'menuDialog', 'removeDialog'].forEach(function(id) { $(id).hidden = true; });
+    }
+    var toastTimer;
+    function toast(msg) {
+      var t = $('toast');
+      t.textContent = msg;
+      t.classList.remove('hide');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function() { t.classList.add('hide'); }, 4000);
+    }
+
+    // ── Events ───────────────────────────────────────────────────
+    CHIPS.forEach(function(c) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = c[0];
+      b.dataset.offset = c[1];
+      b.addEventListener('click', function() { setDate(localDay(c[1])); });
+      $('chips').appendChild(b);
+    });
+    $('dateInput').addEventListener('input', function() { setDate(this.value); });
+
+    $('dateForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      var v = $('dateInput').value;
+      if (!v || v > localDay()) { toast('Pick a day up to today.'); return; }
+      setStart(v, 'Calendar updated from ' + show(v, { day: 'numeric', month: 'long' }) + '.');
     });
 
-    function fmtLocal(d) {
-      return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-    }
-
-    function toast(msg, icon) {
-      var t = document.getElementById('toast');
-      document.getElementById('toastMsg').textContent = msg;
-      document.getElementById('toastIcon').textContent = icon || '🌸';
-      t.classList.remove('translate-y-20','opacity-0','pointer-events-none');
-      setTimeout(function(){ t.classList.add('translate-y-20','opacity-0','pointer-events-none'); }, 3500);
-    }
-
-    // ── API calls ────────────────────────────────────────────────
-    function fetchStatus() {
-      google.script.run.withSuccessHandler(onStatus).withFailureHandler(onErr).getCycleStatus();
-    }
-
-    function onStatus(s) {
-      state = s;
-      document.getElementById('loading').classList.add('hidden');
-
-      if (!s || !s.hasActiveCycle) {
-        document.getElementById('startScreen').classList.remove('hidden');
-        document.getElementById('dashboard').classList.add('hidden');
-      } else {
-        document.getElementById('startScreen').classList.add('hidden');
-        document.getElementById('dashboard').classList.remove('hidden');
-        render(s);
+    var ACTIONS = {
+      reload: load,
+      today: function() {
+        if (current && current.startDate === localDay()) { toast('Today is already your start date.'); return; }
+        setStart(localDay(), 'Logged today. Calendar updated.');
+      },
+      // Cycles repeat every 28 days, so re-logging the current cycle's start fills a fresh year.
+      extend: function() { setStart(current.phases[0].from, 'Calendar extended by another year.'); },
+      remove: function() {
+        closeDialogs();
+        call('removeEverything', [], function(s) { render(s); toast('CycleSync removed from your calendar.'); }, 'Removing your calendar…');
       }
-    }
+    };
 
-    function onErr(e) {
-      toast('Error: ' + (e.message || e), '⚠️');
-      document.getElementById('loading').classList.add('hidden');
-      document.getElementById('startScreen').classList.remove('hidden');
-    }
+    document.addEventListener('click', function(e) {
+      var el = e.target.closest('[data-action],[data-open],[data-close]');
+      if (el && el.dataset.action) ACTIONS[el.dataset.action]();
+      else if (el && el.dataset.open) openDialog(el.dataset.open);
+      else if (el && el.hasAttribute('data-close')) closeDialogs();
+      else if (e.target.classList.contains('overlay') && e.target.id !== 'busy') closeDialogs();
+    });
+    document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeDialogs(); });
 
-    // ── Render dashboard ─────────────────────────────────────────
-    function render(s) {
-      var ph = s.phase;
-      var c = COLORS[ph.id] || COLORS.menstrual;
-
-      // Hero card
-      var hero = document.getElementById('heroCard');
-      hero.className = 'bg-white rounded-2xl border border-gray-100 p-5 ' + c.glow;
-
-      var badge = document.getElementById('phaseBadge');
-      badge.className = 'inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wide mb-1.5 ' + c.badge;
-      document.getElementById('phaseEmoji').textContent = ph.emoji;
-      document.getElementById('phaseName').textContent  = ph.name;
-      document.getElementById('dayTitle').innerHTML = 'Day ' + s.phaseDay + ' <span class="text-gray-400 font-normal text-base">/ ' + ph.days + '</span>';
-      document.getElementById('cycleInfo').textContent = 'Cycle Day ' + s.cycleDay + ' of ' + (s.cycleLen||28) + ' · Cycle #' + s.cycleNumber;
-      document.getElementById('countdown').textContent = s.phaseDaysLeft === 0 ? 'Tomorrow' : 'in ' + s.phaseDaysLeft + ' day' + (s.phaseDaysLeft>1?'s':'');
-
-      // Progress bars
-      var ids = ['menstrual','follicular','ovulatory','luteal'];
-      for (var i=0; i<4; i++) {
-        var bar = document.getElementById('bar'+i);
-        bar.className = 'h-full rounded-full transition-all ' + (i <= s.phaseIdx ? COLORS[ids[i]].bar : 'bg-gray-200');
-      }
-
-      // Phase list
-      var list = document.getElementById('phaseList');
-      list.innerHTML = '';
-      if (s.phases) {
-        for (var j=0; j<s.phases.length; j++) {
-          var p = s.phases[j];
-          var label = p.isCurrent ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500 text-white">Now</span>'
-                    : p.isPast    ? '<span class="text-gray-400 text-[10px]">Done</span>'
-                    :               '<span class="text-gray-500 text-[10px]">Upcoming</span>';
-          var border = p.isCurrent ? 'border-rose-200 bg-rose-50/40' : 'border-gray-100 bg-gray-50/50';
-          var div = document.createElement('div');
-          div.className = 'p-2.5 rounded-xl border ' + border + ' flex items-center justify-between';
-          div.innerHTML = '<div class="flex items-center space-x-2"><span class="text-lg">' + p.emoji + '</span><div><div class="text-xs font-bold text-gray-800">' + p.name + '</div><div class="text-[10px] text-gray-500">' + p.startDate + ' → ' + p.endDate + '</div></div></div>' + label;
-          list.appendChild(div);
-        }
-      }
-
-      // Upcoming cycles
-      var up = document.getElementById('upcomingList');
-      up.innerHTML = '';
-      var next = new Date(s.nextCycleDate + 'T00:00:00');
-      for (var k=1; k<=3; k++) {
-        var cn = s.cycleNumber + k;
-        var ds = next.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
-        var row = document.createElement('div');
-        row.className = 'flex justify-between p-2 bg-gray-50 rounded-lg text-xs';
-        row.innerHTML = '<span class="font-semibold">Cycle #' + cn + '</span><span class="text-gray-500">' + ds + '</span>';
-        up.appendChild(row);
-        next.setDate(next.getDate() + (s.cycleLen||28));
-      }
-    }
-
-    // ── Actions ──────────────────────────────────────────────────
-    function setPreset(off) {
-      var d = new Date(); d.setDate(d.getDate()+off);
-      document.getElementById('startDateInput').value = fmtLocal(d);
-    }
-
-    function submitStart() {
-      var v = document.getElementById('startDateInput').value;
-      if (!v) { toast('Pick a date first','⚠️'); return; }
-      doLog(v);
-    }
-
-    function logToday() { doLog(fmtLocal(new Date())); }
-
-    function showDatePicker() { document.getElementById('dateModal').classList.remove('hidden'); document.getElementById('modalDateInput').value = fmtLocal(new Date()); }
-    function hideDatePicker() { document.getElementById('dateModal').classList.add('hidden'); }
-    function setModalPreset(off) { var d=new Date(); d.setDate(d.getDate()+off); document.getElementById('modalDateInput').value=fmtLocal(d); }
-    function submitModal() {
-      var v = document.getElementById('modalDateInput').value;
-      if (!v) { toast('Pick a date','⚠️'); return; }
-      hideDatePicker();
-      doLog(v);
-    }
-
-    function doLog(dateStr) {
-      toast('Syncing calendar… this may take a moment.','⏳');
-      google.script.run.withSuccessHandler(function(res) {
-        toast(res.message || 'Done!', '✅');
-        if (res.status) onStatus(res.status); else fetchStatus();
-      }).withFailureHandler(onErr).logCycleStart(dateStr);
-    }
-
-    function showSettings() { document.getElementById('settingsModal').classList.remove('hidden'); }
-    function hideSettings() { document.getElementById('settingsModal').classList.add('hidden'); }
-    function doReset() {
-      if (!confirm('Delete all cycle events from Google Calendar and reset?')) return;
-      hideSettings();
-      toast('Clearing…','⏳');
-      google.script.run.withSuccessHandler(function(res) {
-        toast(res.message,'🗑️');
-        onStatus(res.status);
-      }).withFailureHandler(onErr).resetCycleData();
-    }
+    load();
   </script>
 </body>
 </html>

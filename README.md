@@ -1,73 +1,69 @@
-# 🌸 CycleSync - Menstrual Cycle Google Calendar Integration
+# 🌸 CycleSync
 
-> Automatically project and track your 4-phase menstrual cycle for **1 full year (~14 cycles)** in Google Calendar, with instant recalibration whenever your cycle starts earlier or later than anticipated.
+Your menstrual cycle phases as small daily icons in Google Calendar (🔴 🌱 🦋 🌙), with tips for every day.
 
-👉 **Open the app: [jahody.github.io/cycle](https://jahody.github.io/cycle/)** (sign in with your Google account; it only ever touches your own calendar)
-
----
-
-## ✨ Features
-
-- **🔬 4 Biologically Accurate Phases (28 Days Total)**:
-  - 🔴 **Menstrual Phase (Days 1–5)**: Rest, recovery & self-care
-  - 🌱 **Follicular Phase (Days 6–14)**: Rising energy, creativity & new ideas
-  - 🦋 **Ovulatory Phase (Days 15–18)**: Peak energy & fertility window
-  - 🌙 **Luteal Phase (Days 19–28)**: Winding down, organization & focus
-- **📅 1-Year Projections**: Marks every day of the next 14 cycles in Google Calendar with a small phase icon (🔴 🌱 🦋 🌙), shown like a weather forecast instead of long coloured bars. Clicking a day shows what that phase means for hormones, energy, body, movement, food and focus.
-- **⚡ Instant Recalibration**: Pick your actual period start date anytime — the old projection is removed and the next year is regenerated from the new date.
-- **🛡️ Dedicated Secondary Calendar**: Manages a separate `🌸 Cycle Tracker` calendar so your primary work/personal calendar remains uncluttered.
-- **📱 Phone Friendly**: Add the app to your iOS / Android Home Screen for 1-tap logging.
+👉 **Open the app: [jahody.github.io/cycle](https://jahody.github.io/cycle/)**
 
 ---
 
-## 📖 Complete Setup Guide
+## ✨ What it does
 
-To run your own copy, or to work on the code:
+- **A small icon on every day of the next year**, in a separate `🌸 Cycle Tracker` calendar. Icons are all-day events shown as *Free* with no reminders, so they sit quietly at the top of each day like a weather forecast.
+- **Details on tap**: each day's event says which phase and day it is, when the next phase or period starts, and short notes on hormones, energy, body, movement, food and focus.
+- **One tap when your period starts**: log *Today* or another day and the whole year is recalculated.
+- **The app** shows today's phase and tips, the phases of the current cycle and your next three periods. It works on desktop and phones, in light and dark mode, and installs to an Android or iPhone home screen.
 
-👉 **[Read the Full Setup Guide (SETUP_GUIDE.md)](SETUP_GUIDE.md)**
+| Phase | Cycle days | Icon |
+|---|---|---|
+| Menstrual | 1–5 | 🔴 |
+| Follicular | 6–14 | 🌱 |
+| Ovulatory | 15–18 | 🦋 |
+| Luteal | 19–28 | 🌙 |
+
+Phases are estimates for a regular 28-day cycle, not medical advice or a method of contraception.
+
+## 🔑 First sign-in
+
+The first time you open the app, Google asks for permission to use your calendar and shows **“Google hasn’t verified this app”**, because CycleSync is a free personal project Google hasn't reviewed. Tap **Advanced → Go to CycleSync (unsafe)** and keep the **Google Calendar** box ticked. The [app page](https://jahody.github.io/cycle/?about) walks through it step by step.
+
+## 🔒 Privacy
+
+CycleSync runs inside your own Google account as a Google Apps Script web app. Your start date is saved privately in that account, and the only calendar it changes is its own `🌸 Cycle Tracker`. Nothing is sent anywhere else. The app's menu has **Remove CycleSync from my calendar**, and access can be revoked at [myaccount.google.com/connections](https://myaccount.google.com/connections).
 
 ---
 
-## 🚀 Run Your Own Copy (2 Minutes)
+## 🛠️ How it works
 
-1. Go to **[script.google.com](https://script.google.com)** ➔ Click **+ New Project**.
-2. Copy [`apps_script/SingleFile_Code.js`](apps_script/SingleFile_Code.js) and paste it into `Code.gs`.
-3. Click **Deploy** ➔ **New deployment** ➔ Select **Web app**:
-   - **Execute as**: `User accessing the web app` *(so anyone can use their own Google Calendar)*
-   - **Who has access**: `Anyone with a Google Account`
-4. Authorize and copy your URL!
+| Part | What it is |
+|---|---|
+| `apps_script/Code.js` | Server side. Saves the start date, and keeps 28 recurring all-day events in the user's calendar (one per cycle day, repeating every 28 days, 14 times) through the Google Calendar API. Logging a new date moves those events instead of recreating them. |
+| `apps_script/Index.html` | The app's page. |
+| `apps_script/appsscript.json` | Apps Script manifest: runs as the signed-in user and enables the Calendar API. |
+| `docs/` | The GitHub Pages site at jahody.github.io/cycle: landing page, install manifest and icons. Returning visitors are forwarded straight to the app. |
+| `src/tests/test_cycle.js` | Runs `Code.js` against a fake Google Calendar. |
+| `.clasp.json` | Links this folder to the live Apps Script project. |
 
----
+## 💻 Development
 
-## 🛠️ Development
-
-The app is a Google Apps Script web app. The code lives in `apps_script/` and is deployed with [clasp](https://github.com/google/clasp):
+One-time setup: turn on the **Apps Script API** at [script.google.com/home/usersettings](https://script.google.com/home/usersettings), then:
 
 ```bash
 npm install
-npm test             # runs apps_script/Code.js against a fake Google Calendar
-npm run build        # regenerates SingleFile_Code.js after editing Code.js or Index.html
-npm run gas:deploy   # pushes the code and points the live web app at the new version
+npx clasp login
 ```
 
-On Windows PowerShell with script execution disabled, `npm` and `npx` are blocked; use `npm.cmd` and `npx.cmd` instead (for example `npm.cmd run gas:deploy`).
+Everyday commands:
 
----
-
-## 📁 Repository Structure
-
+```bash
+npm test             # runs Code.js against a fake Google Calendar
+npm run gas:deploy   # uploads apps_script/ and points the live web app at the new version (same URL)
 ```
-├── apps_script/
-│   ├── Code.js              # Apps Script backend: phases, calendar sync, cycle status
-│   ├── Index.html           # Apps Script frontend UI
-│   ├── SingleFile_Code.js   # Code.js + Index.html in one file for copy-paste setup (npm run build)
-│   └── appsscript.json      # Apps Script manifest (matches the live project)
-├── docs/
-│   └── index.html           # GitHub Pages: forwards jahody.github.io/cycle to the live app
-├── src/
-│   ├── build_single_file.js # Builds SingleFile_Code.js
-│   └── tests/test_cycle.js  # Tests for Code.js against a fake Google Calendar
-├── .clasp.json              # Links this repo to the live Apps Script project
-├── SETUP_GUIDE.md           # Step-by-step setup documentation & troubleshooting
-└── README.md
-```
+
+`npm run gas:status`, `gas:pull` and `gas:push` list, download or upload the Apps Script files. On Windows PowerShell with script execution disabled, use `npm.cmd` and `npx.cmd` (for example `npm.cmd run gas:deploy`). If the browser can't hand the login back to clasp, use `npx clasp login --no-localhost`.
+
+### Run your own copy
+
+1. Create a project at [script.google.com](https://script.google.com) and copy its **Script ID** (Project Settings) into `.clasp.json`.
+2. `npx clasp push --force`
+3. In the Apps Script editor: **Deploy → New deployment → Web app**, *Execute as: User accessing the web app*, *Who has access: Anyone with a Google account*.
+4. Put the new deployment ID into the `gas:deploy` script in `package.json`, and its `/exec` URL into `APP_URL` in `docs/index.html`.

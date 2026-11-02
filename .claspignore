@@ -1,6 +1,0 @@
-# Push only the Apps Script sources. SingleFile_Code.js bundles Code.js and
-# Index.html for copy-paste setup and would redefine every function.
-**/**
-!Code.js
-!Index.html
-!appsscript.json
