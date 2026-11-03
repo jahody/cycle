@@ -8,7 +8,7 @@ Your menstrual cycle phases as small daily icons in Google Calendar (🔴 🌱 �
 
 ## ✨ What it does
 
-- **A small icon on every day of the next year**, in a separate `🌸 Cycle Tracker` calendar. Icons are all-day events shown as *Free* with no reminders, so they sit quietly at the top of each day like a weather forecast.
+- **A small icon on every day of the next year**, in a separate `🌸 Cycle Tracker` calendar. Icons are all-day events shown as *Free* with no reminders, so they sit quietly at the top of each day like a weather forecast. The calendar's color matches a light or dark Google Calendar, so only the icon shows: it starts out matching your device's theme and can be switched in the app's menu.
 - **Details on tap**: each day's event says which phase and day it is, when the next phase or period starts, and short notes on hormones, energy, body, movement, food and focus.
 - **One tap when your period starts**: log *Today* or another day and the whole year is recalculated.
 - **The app** shows today's phase and tips, the phases of the current cycle and your next three periods. It works on desktop and phones, in light and dark mode, and installs to an Android or iPhone home screen.

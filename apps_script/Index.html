@@ -97,6 +97,8 @@
     @media (min-width: 560px) { .overlay { align-items: center; } }
     .sheet { width: 100%; max-width: 26rem; background: var(--card); border-radius: 22px; padding: 20px; display: grid; gap: 14px; }
     .sheet h3 { margin: 0; font-size: 18px; }
+    .look { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .look .chips { flex-wrap: nowrap; }
     .menu a, .menu button { display: block; width: 100%; padding: 12px 4px; border: 0; border-bottom: 1px solid var(--line);
                             background: none; text-align: left; text-decoration: none; font-size: 15px; }
     .busy { align-items: center; }
@@ -219,6 +221,14 @@
       <h3 id="menuTitle">CycleSync</h3>
       <p class="muted flush">Your start date is saved privately in your Google account.
         CycleSync only changes its own “🌸 Cycle Tracker” calendar.</p>
+      <div class="look" id="lookRow">
+        <div><strong>Calendar background</strong>
+          <div class="muted">Match your Google Calendar’s theme so each day shows just its icon.</div></div>
+        <div class="chips" id="lookChips">
+          <button type="button" data-action="look" data-look="light">Light</button>
+          <button type="button" data-action="look" data-look="dark">Dark</button>
+        </div>
+      </div>
       <nav class="menu">
         <a href="<?= appUrl ?>?about" target="_blank" rel="noopener">ℹ️ About, help &amp; install on phone</a>
         <a href="https://myaccount.google.com/connections" target="_blank" rel="noopener">🔒 Manage CycleSync’s access</a>
@@ -289,7 +299,8 @@
     function load() { showView('loadingView'); call('getStatus', [localDay()], render); }
     function setStart(dateStr, message) {
       closeDialogs();
-      call('setStartDate', [dateStr, localDay()], function(s) { render(s); toast(message); }, 'Updating your calendar…');
+      var deviceLook = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';  // used for a new calendar
+      call('setStartDate', [dateStr, localDay(), deviceLook], function(s) { render(s); toast(message); }, 'Updating your calendar…');
     }
 
     // ── Rendering ────────────────────────────────────────────────
@@ -392,7 +403,14 @@
     function openDialog(id) {
       closeDialogs();
       if (id === 'dateDialog') placeForm('dialogSlot', 'Update calendar');
+      if (id === 'menuDialog') markLook(current && current.look);
       $(id).hidden = false;
+    }
+    function markLook(look) {
+      $('lookRow').hidden = !look;
+      Array.prototype.forEach.call($('lookChips').children, function(chip) {
+        chip.setAttribute('aria-pressed', String(chip.dataset.look === look));
+      });
     }
     function closeDialogs() {
       ['dateDialog', 'menuDialog', 'removeDialog'].forEach(function(id) { $(id).hidden = true; });
@@ -432,6 +450,15 @@
       },
       // Cycles repeat every 28 days, so re-logging the current cycle's start fills a fresh year.
       extend: function() { setStart(current.phases[0].from, 'Calendar extended by another year.'); },
+      look: function(chip) {
+        var look = chip.dataset.look;
+        if (look === current.look) return;
+        markLook(look);  // answers the tap at once; reopening the menu shows the saved look
+        call('setCalendarLook', [look], function(saved) {
+          current.look = saved;
+          toast('Calendar background set to ' + saved + '.');
+        });
+      },
       remove: function() {
         closeDialogs();
         call('removeEverything', [], function(s) { render(s); toast('CycleSync removed from your calendar.'); }, 'Removing your calendar…');
@@ -440,7 +467,7 @@
 
     document.addEventListener('click', function(e) {
       var el = e.target.closest('[data-action],[data-open],[data-close]');
-      if (el && el.dataset.action) ACTIONS[el.dataset.action]();
+      if (el && el.dataset.action) ACTIONS[el.dataset.action](el);
       else if (el && el.dataset.open) openDialog(el.dataset.open);
       else if (el && el.hasAttribute('data-close')) closeDialogs();
       else if (e.target.classList.contains('overlay') && e.target.id !== 'busy') closeDialogs();

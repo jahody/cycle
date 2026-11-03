@@ -37,7 +37,7 @@ function loadApp({ authorized = true } = {}) {
     CalendarList: {
       get: id => ({ id, summary: cal(id).summary }),
       list: () => ({ items: Object.values(calendars).map(c => ({ id: c.id, summary: c.summary })) }),
-      patch: (res, id, args) => { cal(id).color = args.colorRgbFormat ? res.backgroundColor : null; },
+      patch: (res, id, args) => { Object.assign(cal(id), args.colorRgbFormat ? { color: res.backgroundColor, textColor: res.foregroundColor } : { color: null }); },
     },
     Calendars: {
       insert: res => { const id = 'cal' + nextId++; calendars[id] = { id, ...res, events: {} }; return { id }; },
@@ -244,6 +244,33 @@ console.log('--- Testing apps_script/Code.js (5 / 9 / 4 / 10 day phases) ---');
   assert(!app.theCalendar() && Object.keys(app.store).length === 0 && s.active === false,
          'Deletes the CycleSync calendar and every saved setting');
   assert(app.ctx.removeEverything().active === false, 'Removing again when nothing is left is harmless');
+}
+
+// Test 11: Light or dark calendar background
+{
+  const app = loadApp();
+  let s = app.ctx.setStartDate('2026-08-01', '2026-08-01', 'dark');
+  assert(app.theCalendar().color === '#1b1b1b' && app.theCalendar().textColor === '#ffffff' && s.look === 'dark',
+         'A device in dark mode gets a new calendar in the dark look');
+  s = app.ctx.setStartDate('2026-08-02', '2026-08-02', 'light');
+  assert(app.theCalendar().color === '#1b1b1b' && s.look === 'dark', 'Re-syncing from a light device keeps the chosen look');
+
+  assert(app.ctx.setCalendarLook('light') === 'light' && app.theCalendar().color === '#ffffff' &&
+         app.ctx.getStatus('2026-08-02').look === 'light', 'The menu switch recolours the calendar and remembers it');
+  assert(throws(() => app.ctx.setCalendarLook('pink'), /Unknown calendar look/) && throws(() => app.ctx.setCalendarLook('constructor'), /Unknown/),
+         'Unknown looks are refused');
+
+  app.ctx.setCalendarLook('dark');
+  app.ctx.Calendar.Calendars.remove(app.theCalendar().id);  // the user deleted it in Google Calendar
+  app.ctx.setStartDate('2026-08-02', '2026-08-02', 'light');
+  assert(app.theCalendar().color === '#1b1b1b', 'A recreated calendar keeps the chosen look');
+
+  const old = loadApp();
+  old.ctx.Calendar.Calendars.insert({ summary: '🌸 Cycle Tracker' });  // white, from before the switch existed
+  old.store.LAST_START_DATE = '2026-08-01';
+  s = old.ctx.setStartDate('2026-08-01', '2026-08-01', 'dark');
+  assert(s.look === 'light' && !old.theCalendar().color, 'An existing calendar is not recoloured by a sync');
+  assert(loadApp().ctx.setStartDate('2026-08-01', '2026-08-01', 'sepia').look === 'light', 'An unknown device look falls back to light');
 }
 
 console.log('--- All Tests Completed ---');

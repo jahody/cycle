@@ -15,7 +15,6 @@
 // ─── Configuration ───────────────────────────────────────────────
 var APP_URL        = 'https://jahody.github.io/cycle/';
 var CALENDAR_NAME  = '🌸 Cycle Tracker';
-var CALENDAR_COLOR = '#ffffff'; // white: each day shows just its icon, like a weather calendar
 var NUM_CYCLES     = 14;        // cycles filled in from the current one (~1 year)
 var MAX_PAST_DAYS  = 365;       // oldest start date accepted
 var LEGACY_TAG     = '[CycleSync]'; // marks events made by versions before November 2026
@@ -55,6 +54,14 @@ var PHASES = [
     focus:   'Finish tasks, organise, detail work and admin.' }
 ];
 var CYCLE_LEN = PHASES.reduce(function(s, p) { return s + p.days; }, 0); // 28
+
+// Google Calendar has one colour per calendar and no transparent one, so the
+// calendar takes the background of the user's Google Calendar theme: each day
+// then shows just its icon, like a weather calendar.
+var LOOKS = {
+  light: { backgroundColor: '#ffffff', foregroundColor: '#000000' },
+  dark:  { backgroundColor: '#1b1b1b', foregroundColor: '#ffffff' }
+};
 
 // ─── Web app ─────────────────────────────────────────────────────
 function doGet() {
@@ -125,16 +132,24 @@ function findCalendar(props) {
   return byName ? byName.id : null;
 }
 
-/** ID of the user's CycleSync calendar, creating it on first use. */
-function calendarId(props) {
+/** The calendar's look: the one chosen in the app, else light (calendars made before the choice existed are white). */
+function savedLook(props) { return props.getProperty('CALENDAR_LOOK') || 'light'; }
+
+function paintCalendar(id, look) {
+  Calendar.CalendarList.patch(LOOKS[look], id, { colorRgbFormat: true });
+}
+
+/** ID of the user's CycleSync calendar, creating it on first use in `newLook` (or the look chosen before). */
+function calendarId(props, newLook) {
   var id = findCalendar(props);
   if (!id) {
     id = Calendar.Calendars.insert({
       summary: CALENDAR_NAME,
       description: 'Daily menstrual cycle phase icons from CycleSync: ' + APP_URL
     }).id;
-    Calendar.CalendarList.patch({ backgroundColor: CALENDAR_COLOR, foregroundColor: '#000000' },
-                                id, { colorRgbFormat: true });
+    var look = props.getProperty('CALENDAR_LOOK') || (LOOKS.hasOwnProperty(newLook) ? newLook : 'light');
+    paintCalendar(id, look);
+    props.setProperty('CALENDAR_LOOK', look);
   }
   props.setProperty('CALENDAR_ID', id);
   return id;
@@ -237,6 +252,7 @@ function getStatus(todayStr) {
     active:      true,
     startDate:   startStr,
     filledUntil: props.getProperty('FILLED_UNTIL'),
+    look:        savedLook(props),
     cycleDay:    cycleDay,
     phaseIndex:  pos.index,
     phaseDay:    pos.day,
@@ -247,8 +263,11 @@ function getStatus(todayStr) {
   };
 }
 
-/** Save the day the last period started and fill the calendar from it. */
-function setStartDate(startStr, todayStr) {
+/**
+ * Save the day the last period started and fill the calendar from it. `deviceLook`
+ * ('light' or 'dark', the browser's theme) colours the calendar if it is new.
+ */
+function setStartDate(startStr, todayStr, deviceLook) {
   var start = dayNum(startStr), today = dayNum(todayStr);
   if (start > today) throw new Error('The start date can’t be in the future.');
   if (today - start > MAX_PAST_DAYS) throw new Error('Pick a start date within the last year.');
@@ -256,13 +275,25 @@ function setStartDate(startStr, todayStr) {
   withUserLock(function() {
     var props = PropertiesService.getUserProperties();
     var first = cycleStart(start, today);
-    fillCalendar(calendarId(props), first);
+    fillCalendar(calendarId(props, deviceLook), first);
     props.setProperties({
       LAST_START_DATE: startStr,
       FILLED_UNTIL:    dayStr(first + NUM_CYCLES * CYCLE_LEN - 1)
     });
   });
   return getStatus(todayStr);
+}
+
+/** Colour the calendar for a 'light' or 'dark' Google Calendar. */
+function setCalendarLook(look) {
+  if (!LOOKS.hasOwnProperty(look)) throw new Error('Unknown calendar look: ' + look);
+  withUserLock(function() {
+    var props = PropertiesService.getUserProperties();
+    var id = findCalendar(props);
+    if (id) paintCalendar(id, look);  // otherwise the next sync creates it in this look
+    props.setProperty('CALENDAR_LOOK', look);
+  });
+  return look;
 }
 
 /** Delete the CycleSync calendar and everything saved for this user. */
